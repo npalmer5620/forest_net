@@ -1,0 +1,224 @@
+"""Visualisation of wsnlab library. Based on wsnsimpy_tk. Used package instead of message by Mustafa Tosun.
+"""
+from source import wsnlab, config
+from source.wsnlab import *
+from threading import Thread
+from topovis import Scene
+from topovis.TkPlotter import Plotter
+
+
+class Node(wsnlab.Node):
+    """Class to model a visualised network node inherited wsnlab.Node.
+
+       Attributes:
+           scene (Scene): Scene object to visualise
+
+    """
+
+    ###################
+    def __init__(self, sim, id, pos):
+        """Constructor for visualised Node class. Creates a node in topovis scene.
+
+           Args:
+               sim (Simulator): Simulation environment of node.
+               id (int): Global unique ID of node.
+               pos (Tuple(double,double)): Position of node.
+
+           Returns:
+               Node: Created node object.
+        """
+        super().__init__(sim, id, pos)
+        self.scene = self.sim.scene
+        self._parent_link_target = None
+        self.scene.node(id, *pos)
+
+    ###################
+    def send(self, pck):
+        """Visualise sending process in addition to base send method.
+
+           Args:
+               pck (Dict): Package to be sent.
+
+           Returns:
+
+        """
+        # UNcomment for Radio Circles 
+
+        #obj_id = self.scene.circle(
+        #    self.pos[0], self.pos[1],
+        #    self.tx_range,
+        #    line="wsnsimpy:tx")
+
+        pck.update({'last_tx_uid': self.id})
+        super().send(pck)
+        
+        #Uncomment for Radio Circles 
+        #self.delayed_exec(0.2, self.scene.delshape, obj_id)
+        
+        # When unicast is added, it needs to be re-arranged
+        # if not pck['dst_addr'].is_equal(wsnlab.BROADCAST_ADDR):
+        #     destPos = self.sim.nodes[pck['dst_addr'].l].pos
+        #     obj_id = self.scene.line(
+        #         self.pos[0], self.pos[1],
+        #         destPos[0], destPos[1],
+        #         line="wsnsimpy:unicast")
+        #     self.delayed_exec(0.2,self.scene.delshape,obj_id)
+
+    ###################
+
+
+    def draw_tx_range(self):
+        """Draws transmission range circle for the node."""
+        shape_id = f"tx_range_{self.id}"
+        self.tx_range_shape = self.scene.circle(self.pos[0], self.pos[1], self.tx_range, line="wsnsimpy:tx", id=shape_id)
+
+    def clear_tx_range(self):
+        if getattr(self, 'tx_range_shape', None) is not None:
+            try:
+                self.scene.delshape(self.tx_range_shape)
+            except KeyError:
+                pass
+            self.tx_range_shape = None
+
+
+
+    def move(self, x, y):
+        """Visualise move process in addition to base move method.
+
+           Args:
+               x (double): x of position.
+               y (double): y of position.
+
+           Returns:
+
+        """
+        super().move(x, y)
+        self.scene.nodemove(self.id, x, y)
+
+    ####################
+    def draw_parent(self):
+        """Draws parent relation to given destination address.
+
+           Args:
+
+           Returns:
+
+        """
+        target = self.parent_gui
+        if not getattr(config, "VISUAL_DRAW_LINKS", True) or target is None:
+            self._parent_link_target = None
+            return
+        if self._parent_link_target == target:
+            return  # already drawn
+        if self._parent_link_target is not None and self._parent_link_target != target:
+            # clean up stale link if the parent changed
+            self.erase_parent()
+        self._parent_link_target = target
+        self.scene.addlink(target, self.id, "parent")
+
+    ####################
+    def erase_parent(self):
+        """Draws parent relation to given destination address.
+
+           Args:
+
+           Returns:
+
+        """
+        if self.parent_gui is not None:
+            try:
+                if getattr(config, "VISUAL_DRAW_LINKS", True):
+                    self.scene.dellink(self.parent_gui, self.id, "parent")
+            except KeyError:
+                # link may already be gone; ignore
+                pass
+        self._parent_link_target = None
+
+
+###########################################################
+class _FakeScene:
+    def _fake_method(self, *args, **kwargs):
+        pass
+
+    def __getattr__(self, name):
+        return self._fake_method
+
+
+###########################################################
+
+
+###########################################################
+class Simulator(wsnlab.Simulator):
+    '''Wrap WsnSimPy's Simulator class so that Tk main loop can be started in the
+    main thread
+
+    Attributes:
+        visual (bool): A flag to visualising process.
+        terrain_size (Tuple(double,double)): Size of visualised terrain.
+    '''
+
+    def __init__(self, duration, timescale=1, seed=0, terrain_size=(1000, 1000), visual=True, title=None):
+        """Constructor for visualised Simulator class.
+
+           Args:
+               duration (double): Duration of simulation.
+               timescale (double): Seconds in real time for 1 second in simulation. It arranges speed of simulation
+               seed (double): seed for Random bbject.
+               terrain_size (Tuple(double,double)): Size of visualised terrain.
+               visual (bool): A flag to visualising process.
+               title (string): Title of scene.
+
+           Returns:
+               Simulator: Created Simulator object.
+        """
+        super().__init__(duration, timescale, seed)
+        self.visual = visual
+        self.terrain_size = terrain_size
+        if self.visual:
+            self.scene = Scene(realtime=True)
+            self.scene.linestyle("wsnsimpy:tx", color=(0.6, 0.6, 0.6), dash=(3, 6), width=1)
+            self.scene.linestyle("wsnsimpy:ack", color=(0, 1, 1), dash=(5, 5))
+            self.scene.linestyle("wsnsimpy:unicast", color=(0, 0, 1), width=3, arrow='head')
+            self.scene.linestyle("wsnsimpy:collision", color=(1, 0, 0), width=3)
+            self.scene.linestyle("parent", color=(0,.8,0), arrow="tail", width=2)
+            self.scene.linestyle("router_bridge", color=(1, 0.4, 0), dash=(4, 3), width=2)
+            if title is None:
+                title = "WsnSimPy"
+            self.tkplot = Plotter(windowTitle=title, terrain_size=terrain_size)
+            self.tk = self.tkplot.tk
+            self.scene.addPlotter(self.tkplot)
+            self.scene.init(*terrain_size)
+        else:
+            self.scene = _FakeScene()
+
+    def _update_time(self):
+        """Updates time in scene.
+
+           Args:
+
+           Returns:
+        """
+        interval = getattr(config, "VISUAL_TIME_UPDATE_INTERVAL", 0.1)
+        while True:
+            try:
+                self.scene.setTime(self.now)
+            except Exception:
+                # Visualization can be closed mid-sim; stop updating if canvas is gone.
+                return
+            yield self.timeout(interval)
+
+    def run(self):
+        """Starts visualisation process. Puts base run method to a Thread so that visualisation become main process.
+
+           Args:
+
+           Returns:
+        """
+        if self.visual:
+            self.env.process(self._update_time())
+            thr = Thread(target=super().run)
+            thr.setDaemon(True)
+            thr.start()
+            self.tkplot.tk.mainloop()
+        else:
+            super().run()

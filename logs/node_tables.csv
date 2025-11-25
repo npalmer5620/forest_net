@@ -1,0 +1,101 @@
+node_id,role,addr,neighbors,members,child_networks
+0,REGISTERED,15.2,"[('15.1', 'REGISTERED', 1), ('15.254', 'CLUSTER_HEAD', 1)]",[],[]
+1,REGISTERED,15.1,"[('10.3', 'ROUTER', 1), ('12.254', 'CLUSTER_HEAD', 1), ('15.254', 'CLUSTER_HEAD', 1), ('15.2', 'REGISTERED', 1)]",[],[]
+2,CLUSTER_HEAD,12.254,"[('10.1', 'ROUTER', 1), ('10.3', 'ROUTER', 1), ('15.1', 'REGISTERED', 1), ('12.1', 'REGISTERED', 1)]","[('12.1', 3)]",[]
+3,REGISTERED,12.1,"[('10.1', 'ROUTER', 1), ('12.254', 'CLUSTER_HEAD', 1), ('9.254', 'CLUSTER_HEAD', 1), ('10.4', 'REGISTERED', 1), ('9.2', 'REGISTERED', 1)]",[],[]
+4,REGISTERED,9.2,"[('9.254', 'CLUSTER_HEAD', 1), ('10.4', 'REGISTERED', 1), ('9.1', 'REGISTERED', 1), ('4.4', 'REGISTERED', 1), ('12.1', 'REGISTERED', 1), ('7.1', 'REGISTERED', 1)]",[],[]
+5,REGISTERED,7.1,"[('4.3', 'ROUTER', 1), ('7.254', 'CLUSTER_HEAD', 1), ('9.254', 'CLUSTER_HEAD', 1), ('4.4', 'REGISTERED', 1), ('9.2', 'REGISTERED', 1)]",[],[]
+6,CLUSTER_HEAD,7.254,"[('4.3', 'ROUTER', 1), ('4.4', 'REGISTERED', 1), ('7.1', 'REGISTERED', 1), ('7.2', 'REGISTERED', 1)]","[('7.1', 5), ('7.2', 7)]",[]
+7,REGISTERED,7.2,"[('4.3', 'ROUTER', 1), ('7.254', 'CLUSTER_HEAD', 1), ('1.3', 'ROUTER', 1), ('1.4', 'ROUTER', 1)]",[],[]
+8,ROUTER,1.3,"[('1.254', 'ROOT', 1), ('1.4', 'ROUTER', 1), ('5.254', 'CLUSTER_HEAD', 1), ('1.6', 'REGISTERED', 1), ('7.2', 'REGISTERED', 1)]",[],[]
+9,CLUSTER_HEAD,5.254,"[('1.3', 'ROUTER', 1), ('1.6', 'REGISTERED', 1)]",[],[]
+10,CLUSTER_HEAD,15.254,"[('10.3', 'ROUTER', 1), ('10.6', 'REGISTERED', 1), ('15.1', 'REGISTERED', 1), ('15.2', 'REGISTERED', 1), ('15.3', 'ROUTER', 1)]","[('15.1', 1), ('15.2', 0), ('15.3', 20)]","[(24, '15.3', 'VALID')]"
+11,ROUTER,10.3,"[('10.1', 'ROUTER', 1), ('10.254', 'CLUSTER_HEAD', 1), ('12.254', 'CLUSTER_HEAD', 1), ('10.6', 'REGISTERED', 1), ('15.1', 'REGISTERED', 1), ('15.254', 'CLUSTER_HEAD', 1)]",[],[]
+12,ROUTER,10.1,"[('10.254', 'CLUSTER_HEAD', 1), ('10.3', 'ROUTER', 1), ('10.4', 'REGISTERED', 1), ('12.254', 'CLUSTER_HEAD', 1), ('9.1', 'REGISTERED', 1), ('12.1', 'REGISTERED', 1)]",[],[]
+13,REGISTERED,10.4,"[('8.1', 'ROUTER', 1), ('8.2', 'ROUTER', 1), ('9.254', 'CLUSTER_HEAD', 1), ('10.254', 'CLUSTER_HEAD', 1), ('10.1', 'ROUTER', 1), ('9.1', 'REGISTERED', 1), ('12.1', 'REGISTERED', 1), ('9.2', 'REGISTERED', 1)]",[],[]
+14,CLUSTER_HEAD,9.254,"[('4.4', 'REGISTERED', 1), ('4.5', 'REGISTERED', 1), ('8.1', 'ROUTER', 1), ('10.4', 'REGISTERED', 1), ('9.1', 'REGISTERED', 1), ('7.1', 'REGISTERED', 1), ('12.1', 'REGISTERED', 1), ('9.2', 'REGISTERED', 1)]","[('9.1', 23), ('9.2', 4)]",[]
+15,REGISTERED,4.4,"[('4.254', 'CLUSTER_HEAD', 1), ('4.3', 'ROUTER', 1), ('4.5', 'REGISTERED', 1), ('7.254', 'CLUSTER_HEAD', 1), ('8.1', 'ROUTER', 1), ('9.254', 'CLUSTER_HEAD', 1), ('7.1', 'REGISTERED', 1), ('9.2', 'REGISTERED', 1)]",[],[]
+16,ROUTER,4.3,"[('1.4', 'ROUTER', 1), ('4.254', 'CLUSTER_HEAD', 1), ('4.4', 'REGISTERED', 1), ('4.5', 'REGISTERED', 1), ('7.254', 'CLUSTER_HEAD', 1), ('7.1', 'REGISTERED', 1), ('7.2', 'REGISTERED', 1)]",[],[]
+17,ROUTER,1.4,"[('1.254', 'ROOT', 1), ('1.1', 'ROUTER', 1), ('1.2', 'REGISTERED', 1), ('1.3', 'ROUTER', 1), ('4.254', 'CLUSTER_HEAD', 1), ('4.3', 'ROUTER', 1), ('7.2', 'REGISTERED', 1)]",[],[]
+18,ROOT,1.254,"[('1.1', 'ROUTER', 1), ('1.2', 'REGISTERED', 1), ('1.3', 'ROUTER', 1), ('1.4', 'ROUTER', 1), ('1.5', 'REGISTERED', 1), ('1.6', 'REGISTERED', 1)]","[('1.1', 27), ('1.2', 28), ('1.3', 8), ('1.4', 17), ('1.5', 29), ('1.6', 19)]","[(2, '1.1', 'VALID'), (4, '1.4', 'VALID'), (5, '1.3', 'VALID')]"
+19,REGISTERED,1.6,"[('1.3', 'ROUTER', 1), ('5.254', 'CLUSTER_HEAD', 1), ('1.254', 'ROOT', 1), ('1.2', 'REGISTERED', 1), ('1.5', 'REGISTERED', 1)]",[],[]
+20,ROUTER,15.3,"[('10.5', 'REGISTERED', 1), ('15.254', 'CLUSTER_HEAD', 1), ('10.6', 'REGISTERED', 1), ('24.254', 'CLUSTER_HEAD', 1)]",[],[]
+21,REGISTERED,10.6,"[('10.254', 'CLUSTER_HEAD', 1), ('10.3', 'ROUTER', 1), ('10.5', 'REGISTERED', 1), ('15.254', 'CLUSTER_HEAD', 1), ('15.3', 'ROUTER', 1), ('24.254', 'CLUSTER_HEAD', 1)]",[],[]
+22,CLUSTER_HEAD,10.254,"[('8.2', 'ROUTER', 1), ('10.1', 'ROUTER', 1), ('10.2', 'ROUTER', 1), ('10.3', 'ROUTER', 1), ('10.4', 'REGISTERED', 1), ('10.5', 'REGISTERED', 1), ('10.6', 'REGISTERED', 1), ('9.1', 'REGISTERED', 1)]","[('10.1', 12), ('10.2', 32), ('10.3', 11), ('10.4', 13), ('10.5', 31), ('10.6', 21)]","[(12, '10.1', 'VALID'), (13, '10.2', 'VALID'), (15, '10.3', 'VALID'), (19, '10.2', 'VALID'), (24, '10.3', 'VALID'), (3, '10.2', 'VALID'), (7, '10.2', 'VALID'), (8, '10.2', 'VALID')]"
+23,REGISTERED,9.1,"[('8.1', 'ROUTER', 1), ('9.254', 'CLUSTER_HEAD', 1), ('10.254', 'CLUSTER_HEAD', 1), ('8.254', 'CLUSTER_HEAD', 1), ('10.1', 'ROUTER', 1), ('8.2', 'ROUTER', 1), ('10.4', 'REGISTERED', 1), ('9.2', 'REGISTERED', 1)]",[],[]
+24,ROUTER,8.1,"[('4.1', 'ROUTER', 1), ('4.4', 'REGISTERED', 1), ('4.5', 'REGISTERED', 1), ('8.254', 'CLUSTER_HEAD', 1), ('8.2', 'ROUTER', 1), ('9.254', 'CLUSTER_HEAD', 1), ('10.4', 'REGISTERED', 1), ('9.1', 'REGISTERED', 1)]",[],[]
+25,REGISTERED,4.5,"[('4.1', 'ROUTER', 1), ('4.254', 'CLUSTER_HEAD', 1), ('4.2', 'REGISTERED', 1), ('4.3', 'ROUTER', 1), ('4.4', 'REGISTERED', 1), ('8.1', 'ROUTER', 1), ('9.254', 'CLUSTER_HEAD', 1)]",[],[]
+26,CLUSTER_HEAD,4.254,"[('1.4', 'ROUTER', 1), ('1.1', 'ROUTER', 1), ('4.1', 'ROUTER', 1), ('4.2', 'REGISTERED', 1), ('4.3', 'ROUTER', 1), ('4.4', 'REGISTERED', 1), ('4.5', 'REGISTERED', 1)]","[('4.1', 35), ('4.2', 36), ('4.3', 16), ('4.4', 15), ('4.5', 25)]","[(7, '4.1', 'VALID'), (8, '4.1', 'VALID'), (9, '4.1', 'VALID'), (10, '4.1', 'VALID'), (11, '4.1', 'VALID'), (12, '4.1', 'VALID'), (13, '4.1', 'VALID'), (15, '4.1', 'VALID'), (16, '4.1', 'VALID'), (18, '4.1', 'VALID'), (19, '4.1', 'VALID'), (20, '4.1', 'VALID'), (21, '4.1', 'VALID'), (22, '4.1', 'VALID'), (24, '4.1', 'VALID'), (3, '4.1', 'VALID'), (6, '4.1', 'VALID')]"
+27,ROUTER,1.1,"[('1.254', 'ROOT', 1), ('4.254', 'CLUSTER_HEAD', 1), ('1.2', 'REGISTERED', 1), ('4.2', 'REGISTERED', 1), ('1.4', 'ROUTER', 1), ('2.254', 'CLUSTER_HEAD', 1)]",[],[]
+28,REGISTERED,1.2,"[('1.254', 'ROOT', 1), ('1.1', 'ROUTER', 1), ('1.4', 'ROUTER', 1), ('1.5', 'REGISTERED', 1), ('1.6', 'REGISTERED', 1), ('2.254', 'CLUSTER_HEAD', 1)]",[],[]
+29,REGISTERED,1.5,"[('1.254', 'ROOT', 1), ('1.2', 'REGISTERED', 1), ('1.6', 'REGISTERED', 1), ('9.254', 'CLUSTER_HEAD', 1)]",[],[]
+30,CLUSTER_HEAD,24.254,"[('15.3', 'ROUTER', 1), ('13.3', 'REGISTERED', 1), ('10.5', 'REGISTERED', 1), ('10.6', 'REGISTERED', 1)]",[],[]
+31,REGISTERED,10.5,"[('10.254', 'CLUSTER_HEAD', 1), ('10.2', 'ROUTER', 1), ('13.254', 'CLUSTER_HEAD', 1), ('10.6', 'REGISTERED', 1), ('13.4', 'REGISTERED', 1), ('15.3', 'ROUTER', 1), ('24.254', 'CLUSTER_HEAD', 1)]",[],[]
+32,ROUTER,10.2,"[('8.2', 'ROUTER', 1), ('10.254', 'CLUSTER_HEAD', 1), ('10.5', 'REGISTERED', 1), ('13.254', 'CLUSTER_HEAD', 1), ('13.4', 'REGISTERED', 1)]",[],[]
+33,ROUTER,8.2,"[('8.1', 'ROUTER', 1), ('8.254', 'CLUSTER_HEAD', 1), ('10.254', 'CLUSTER_HEAD', 1), ('10.2', 'ROUTER', 1), ('10.4', 'REGISTERED', 1), ('9.1', 'REGISTERED', 1)]",[],[]
+34,CLUSTER_HEAD,8.254,"[('4.1', 'ROUTER', 1), ('8.1', 'ROUTER', 1), ('8.2', 'ROUTER', 1), ('8.3', 'ROUTER', 1), ('9.1', 'REGISTERED', 1), ('8.4', 'REGISTERED', 1)]","[('8.1', 24), ('8.2', 33), ('8.3', 43), ('8.4', 44)]","[(9, '8.1', 'VALID'), (10, '8.2', 'VALID'), (11, '8.3', 'VALID'), (12, '8.2', 'VALID'), (13, '8.2', 'VALID'), (15, '8.2', 'VALID'), (16, '8.3', 'VALID'), (18, '8.3', 'VALID'), (19, '8.2', 'VALID'), (20, '8.3', 'VALID'), (21, '8.3', 'VALID'), (22, '8.3', 'VALID'), (24, '8.2', 'VALID'), (3, '8.2', 'VALID'), (6, '8.3', 'VALID'), (7, '8.2', 'VALID'), (8, '8.2', 'VALID')]"
+35,ROUTER,4.1,"[('4.254', 'CLUSTER_HEAD', 1), ('4.2', 'REGISTERED', 1), ('4.5', 'REGISTERED', 1), ('8.1', 'ROUTER', 1), ('8.254', 'CLUSTER_HEAD', 1), ('8.4', 'REGISTERED', 1), ('2.4', 'ROUTER', 1), ('12.254', 'CLUSTER_HEAD', 1)]",[],[]
+36,REGISTERED,4.2,"[('1.1', 'ROUTER', 1), ('4.1', 'ROUTER', 1), ('4.254', 'CLUSTER_HEAD', 1), ('4.5', 'REGISTERED', 1), ('2.4', 'ROUTER', 1), ('12.254', 'CLUSTER_HEAD', 1)]",[],[]
+37,CLUSTER_HEAD,2.254,"[('1.2', 'REGISTERED', 1), ('1.1', 'ROUTER', 1), ('2.1', 'REGISTERED', 1), ('2.2', 'ROUTER', 1), ('2.3', 'ROUTER', 1), ('2.4', 'ROUTER', 1)]","[('2.1', 48), ('2.2', 49), ('2.3', 47), ('2.4', 46)]","[(9, '2.2', 'VALID'), (10, '2.3', 'VALID'), (11, '2.3', 'VALID'), (12, '2.4', 'VALID'), (13, '2.3', 'VALID'), (14, '2.3', 'VALID')]"
+38,KILLED,,,,
+39,CLUSTER_HEAD,9.254,"[('1.5', 'REGISTERED', 1), ('2.1', 'REGISTERED', 1), ('2.2', 'ROUTER', 1)]",[],[]
+40,REGISTERED,13.3,"[('13.1', 'ROUTER', 1), ('13.254', 'CLUSTER_HEAD', 1), ('13.2', 'REGISTERED', 1), ('24.254', 'CLUSTER_HEAD', 1)]",[],[]
+41,CLUSTER_HEAD,13.254,"[('10.2', 'ROUTER', 1), ('10.5', 'REGISTERED', 1), ('13.1', 'ROUTER', 1), ('13.2', 'REGISTERED', 1), ('13.3', 'REGISTERED', 1), ('13.4', 'REGISTERED', 1), ('13.5', 'REGISTERED', 1)]","[('13.1', 50), ('13.2', 51), ('13.3', 40), ('13.4', 42), ('13.5', 52)]","[(19, '13.1', 'VALID'), (3, '13.1', 'VALID'), (7, '13.1', 'VALID'), (8, '13.1', 'VALID')]"
+42,REGISTERED,13.4,"[('8.3', 'ROUTER', 1), ('13.254', 'CLUSTER_HEAD', 1), ('10.2', 'ROUTER', 1), ('13.2', 'REGISTERED', 1), ('10.5', 'REGISTERED', 1), ('13.5', 'REGISTERED', 1), ('11.3', 'REGISTERED', 1)]",[],[]
+43,ROUTER,8.3,"[('8.254', 'CLUSTER_HEAD', 1), ('11.254', 'CLUSTER_HEAD', 1), ('13.4', 'REGISTERED', 1), ('13.5', 'REGISTERED', 1), ('11.3', 'REGISTERED', 1), ('8.4', 'REGISTERED', 1)]",[],[]
+44,REGISTERED,8.4,"[('8.3', 'ROUTER', 1), ('8.254', 'CLUSTER_HEAD', 1), ('11.254', 'CLUSTER_HEAD', 1), ('4.1', 'ROUTER', 1), ('11.3', 'REGISTERED', 1), ('12.1', 'REGISTERED', 1), ('12.254', 'CLUSTER_HEAD', 1)]",[],[]
+45,CLUSTER_HEAD,12.254,"[('4.1', 'ROUTER', 1), ('4.2', 'REGISTERED', 1), ('8.4', 'REGISTERED', 1), ('10.3', 'REGISTERED', 1), ('2.4', 'ROUTER', 1), ('12.1', 'REGISTERED', 1)]","[('12.1', 55)]",[]
+46,ROUTER,2.4,"[('4.1', 'ROUTER', 1), ('2.254', 'CLUSTER_HEAD', 1), ('10.254', 'CLUSTER_HEAD', 1), ('2.3', 'ROUTER', 1), ('4.2', 'REGISTERED', 1), ('10.3', 'REGISTERED', 1), ('12.1', 'REGISTERED', 1), ('12.254', 'CLUSTER_HEAD', 1)]",[],[]
+47,ROUTER,2.3,"[('2.1', 'REGISTERED', 1), ('2.254', 'CLUSTER_HEAD', 1), ('10.1', 'ROUTER', 1), ('10.254', 'CLUSTER_HEAD', 1), ('10.3', 'REGISTERED', 1), ('2.4', 'ROUTER', 1)]",[],[]
+48,REGISTERED,2.1,"[('2.254', 'CLUSTER_HEAD', 1), ('2.2', 'ROUTER', 1), ('2.3', 'ROUTER', 1), ('9.254', 'CLUSTER_HEAD', 1), ('10.254', 'CLUSTER_HEAD', 1), ('10.1', 'ROUTER', 1)]",[],[]
+49,ROUTER,2.2,"[('2.1', 'REGISTERED', 1), ('2.254', 'CLUSTER_HEAD', 1), ('9.254', 'CLUSTER_HEAD', 1), ('11.254', 'CLUSTER_HEAD', 1)]",[],[]
+50,ROUTER,13.1,"[('13.254', 'CLUSTER_HEAD', 1), ('19.1', 'ROUTER', 1), ('19.254', 'CLUSTER_HEAD', 1), ('13.2', 'REGISTERED', 1), ('13.3', 'REGISTERED', 1), ('19.2', 'ROUTER', 1)]",[],[]
+51,REGISTERED,13.2,"[('13.1', 'ROUTER', 1), ('13.254', 'CLUSTER_HEAD', 1), ('19.254', 'CLUSTER_HEAD', 1), ('13.3', 'REGISTERED', 1), ('19.2', 'ROUTER', 1), ('13.4', 'REGISTERED', 1), ('13.5', 'REGISTERED', 1), ('3.254', 'CLUSTER_HEAD', 1)]",[],[]
+52,REGISTERED,13.5,"[('13.4', 'REGISTERED', 1), ('13.254', 'CLUSTER_HEAD', 1), ('13.2', 'REGISTERED', 1), ('8.3', 'ROUTER', 1), ('11.3', 'REGISTERED', 1), ('3.254', 'CLUSTER_HEAD', 1)]",[],[]
+53,REGISTERED,11.3,"[('8.3', 'ROUTER', 1), ('11.254', 'CLUSTER_HEAD', 1), ('13.4', 'REGISTERED', 1), ('13.5', 'REGISTERED', 1), ('11.2', 'REGISTERED', 1), ('8.4', 'REGISTERED', 1), ('3.254', 'CLUSTER_HEAD', 1)]",[],[]
+54,CLUSTER_HEAD,11.254,"[('8.3', 'ROUTER', 1), ('11.1', 'ROUTER', 1), ('11.2', 'REGISTERED', 1), ('11.3', 'REGISTERED', 1), ('8.4', 'REGISTERED', 1), ('12.1', 'REGISTERED', 1)]","[('11.1', 64), ('11.2', 63), ('11.3', 53)]","[(16, '11.1', 'VALID'), (18, '11.2', 'VALID'), (20, '11.1', 'VALID'), (21, '11.2', 'VALID'), (22, '11.2', 'VALID'), (6, '11.1', 'VALID')]"
+55,REGISTERED,12.1,"[('11.254', 'CLUSTER_HEAD', 1), ('16.254', 'CLUSTER_HEAD', 1), ('11.1', 'ROUTER', 1), ('10.3', 'REGISTERED', 1), ('2.4', 'ROUTER', 1), ('8.4', 'REGISTERED', 1), ('12.254', 'CLUSTER_HEAD', 1)]",[],[]
+56,REGISTERED,10.3,"[('10.254', 'CLUSTER_HEAD', 1), ('16.254', 'CLUSTER_HEAD', 1), ('16.2', 'REGISTERED', 1), ('16.4', 'REGISTERED', 1), ('2.3', 'ROUTER', 1), ('2.4', 'ROUTER', 1), ('12.254', 'CLUSTER_HEAD', 1), ('12.1', 'REGISTERED', 1)]",[],[]
+57,CLUSTER_HEAD,10.254,"[('16.4', 'REGISTERED', 1), ('2.1', 'REGISTERED', 1), ('2.3', 'ROUTER', 1), ('10.1', 'ROUTER', 1), ('10.2', 'REGISTERED', 1), ('10.3', 'REGISTERED', 1), ('2.4', 'ROUTER', 1)]","[('10.1', 58), ('10.2', 68), ('10.3', 56)]","[(11, '10.1', 'VALID'), (13, '10.1', 'VALID'), (14, '10.1', 'VALID')]"
+58,ROUTER,10.1,"[('10.254', 'CLUSTER_HEAD', 1), ('2.3', 'ROUTER', 1), ('16.4', 'REGISTERED', 1), ('2.1', 'REGISTERED', 1), ('10.2', 'REGISTERED', 1), ('11.1', 'ROUTER', 1), ('11.254', 'CLUSTER_HEAD', 1)]",[],[]
+59,CLUSTER_HEAD,11.254,"[('10.1', 'ROUTER', 1), ('2.2', 'ROUTER', 1), ('10.2', 'REGISTERED', 1), ('11.1', 'ROUTER', 1)]","[('11.1', 69)]","[(13, '11.1', 'VALID'), (14, '11.1', 'VALID')]"
+60,CLUSTER_HEAD,19.254,"[('13.1', 'ROUTER', 1), ('13.2', 'REGISTERED', 1), ('19.1', 'ROUTER', 1), ('19.2', 'ROUTER', 1)]","[('19.1', 70), ('19.2', 61)]","[(3, '19.2', 'VALID'), (7, '19.1', 'VALID'), (8, '19.1', 'VALID')]"
+61,ROUTER,19.2,"[('13.1', 'ROUTER', 1), ('19.254', 'CLUSTER_HEAD', 1), ('19.1', 'ROUTER', 1), ('13.2', 'REGISTERED', 1), ('3.1', 'REGISTERED', 1), ('3.254', 'CLUSTER_HEAD', 1), ('7.3', 'REGISTERED', 1)]",[],[]
+62,CLUSTER_HEAD,3.254,"[('13.5', 'REGISTERED', 1), ('19.2', 'ROUTER', 1), ('13.2', 'REGISTERED', 1), ('11.2', 'REGISTERED', 1), ('11.3', 'REGISTERED', 1), ('3.1', 'REGISTERED', 1), ('7.3', 'REGISTERED', 1)]","[('3.1', 72)]",[]
+63,REGISTERED,11.2,"[('11.254', 'CLUSTER_HEAD', 1), ('11.1', 'ROUTER', 1), ('11.3', 'REGISTERED', 1), ('3.1', 'REGISTERED', 1), ('3.254', 'CLUSTER_HEAD', 1), ('16.3', 'REGISTERED', 1)]",[],[]
+64,ROUTER,11.1,"[('11.254', 'CLUSTER_HEAD', 1), ('16.1', 'ROUTER', 1), ('16.254', 'CLUSTER_HEAD', 1), ('11.2', 'REGISTERED', 1), ('16.3', 'REGISTERED', 1), ('12.1', 'REGISTERED', 1)]",[],[]
+65,CLUSTER_HEAD,16.254,"[('11.1', 'ROUTER', 1), ('16.1', 'ROUTER', 1), ('16.2', 'REGISTERED', 1), ('20.1', 'REGISTERED', 1), ('16.3', 'REGISTERED', 1), ('16.4', 'REGISTERED', 1), ('10.3', 'REGISTERED', 1), ('12.1', 'REGISTERED', 1)]","[('16.1', 75), ('16.2', 66), ('16.3', 74), ('16.4', 67)]","[(20, '16.1', 'VALID'), (6, '16.1', 'VALID')]"
+66,REGISTERED,16.2,"[('16.1', 'ROUTER', 1), ('16.254', 'CLUSTER_HEAD', 1), ('20.254', 'CLUSTER_HEAD', 1), ('20.1', 'REGISTERED', 1), ('20.4', 'REGISTERED', 1), ('16.4', 'REGISTERED', 1), ('10.3', 'REGISTERED', 1)]",[],[]
+67,REGISTERED,16.4,"[('16.254', 'CLUSTER_HEAD', 1), ('20.1', 'REGISTERED', 1), ('20.4', 'REGISTERED', 1), ('16.2', 'REGISTERED', 1), ('10.1', 'ROUTER', 1), ('10.254', 'CLUSTER_HEAD', 1), ('10.2', 'REGISTERED', 1), ('10.3', 'REGISTERED', 1)]",[],[]
+68,REGISTERED,10.2,"[('10.254', 'CLUSTER_HEAD', 1), ('16.4', 'REGISTERED', 1), ('10.1', 'ROUTER', 1), ('11.254', 'CLUSTER_HEAD', 1), ('11.1', 'ROUTER', 1), ('13.2', 'REGISTERED', 1)]",[],[]
+69,ROUTER,11.1,"[('10.1', 'ROUTER', 1), ('10.2', 'REGISTERED', 1), ('11.254', 'CLUSTER_HEAD', 1), ('13.254', 'CLUSTER_HEAD', 1), ('13.2', 'REGISTERED', 1)]",[],[]
+70,ROUTER,19.1,"[('13.1', 'ROUTER', 1), ('19.254', 'CLUSTER_HEAD', 1), ('19.2', 'ROUTER', 1), ('7.254', 'CLUSTER_HEAD', 1), ('7.3', 'REGISTERED', 1)]",[],[]
+71,REGISTERED,7.3,"[('3.254', 'CLUSTER_HEAD', 1), ('19.2', 'ROUTER', 1), ('19.1', 'ROUTER', 1), ('7.254', 'CLUSTER_HEAD', 1), ('7.1', 'ROUTER', 1), ('3.1', 'REGISTERED', 1), ('8.254', 'CLUSTER_HEAD', 1)]",[],[]
+72,REGISTERED,3.1,"[('3.254', 'CLUSTER_HEAD', 1), ('11.2', 'REGISTERED', 1), ('19.2', 'ROUTER', 1), ('7.1', 'ROUTER', 1), ('7.3', 'REGISTERED', 1), ('8.254', 'CLUSTER_HEAD', 1)]",[],[]
+73,KILLED,,,,
+74,REGISTERED,16.3,"[('16.254', 'CLUSTER_HEAD', 1), ('11.1', 'ROUTER', 1), ('16.1', 'ROUTER', 1), ('11.2', 'REGISTERED', 1), ('6.1', 'REGISTERED', 1)]",[],[]
+75,ROUTER,16.1,"[('11.1', 'ROUTER', 1), ('16.254', 'CLUSTER_HEAD', 1), ('16.2', 'REGISTERED', 1), ('20.1', 'REGISTERED', 1), ('20.254', 'CLUSTER_HEAD', 1), ('20.6', 'REGISTERED', 1), ('16.3', 'REGISTERED', 1), ('6.1', 'REGISTERED', 1)]",[],[]
+76,REGISTERED,20.1,"[('16.1', 'ROUTER', 1), ('16.254', 'CLUSTER_HEAD', 1), ('16.2', 'REGISTERED', 1), ('20.254', 'CLUSTER_HEAD', 1), ('20.2', 'REGISTERED', 1), ('20.4', 'REGISTERED', 1), ('16.4', 'REGISTERED', 1)]",[],[]
+77,REGISTERED,20.4,"[('16.2', 'REGISTERED', 1), ('20.1', 'REGISTERED', 1), ('20.254', 'CLUSTER_HEAD', 1), ('20.2', 'REGISTERED', 1), ('16.4', 'REGISTERED', 1), ('13.2', 'REGISTERED', 1)]",[],[]
+78,REGISTERED,13.2,"[('10.2', 'REGISTERED', 1), ('20.4', 'REGISTERED', 1), ('20.2', 'REGISTERED', 1), ('11.1', 'ROUTER', 1), ('13.254', 'CLUSTER_HEAD', 1), ('13.1', 'ROUTER', 1), ('14.2', 'REGISTERED', 1)]",[],[]
+79,CLUSTER_HEAD,13.254,"[('11.1', 'ROUTER', 1), ('13.1', 'ROUTER', 1), ('13.2', 'REGISTERED', 1), ('14.2', 'REGISTERED', 1)]","[('13.1', 88), ('13.2', 78)]","[(14, '13.1', 'VALID')]"
+80,CLUSTER_HEAD,7.254,"[('19.1', 'ROUTER', 1), ('7.1', 'ROUTER', 1), ('7.2', 'REGISTERED', 1), ('7.3', 'REGISTERED', 1), ('7.4', 'REGISTERED', 1)]","[('7.1', 81), ('7.2', 90), ('7.3', 71), ('7.4', 91)]","[(8, '7.1', 'VALID')]"
+81,ROUTER,7.1,"[('3.1', 'REGISTERED', 1), ('7.254', 'CLUSTER_HEAD', 1), ('7.2', 'REGISTERED', 1), ('7.3', 'REGISTERED', 1), ('7.4', 'REGISTERED', 1), ('8.1', 'REGISTERED', 1), ('8.254', 'CLUSTER_HEAD', 1)]",[],[]
+82,CLUSTER_HEAD,8.254,"[('7.1', 'ROUTER', 1), ('7.3', 'REGISTERED', 1), ('3.1', 'REGISTERED', 1), ('7.4', 'REGISTERED', 1), ('8.1', 'REGISTERED', 1)]","[('8.1', 92)]",[]
+83,KILLED,,,,
+84,REGISTERED,6.1,"[('20.6', 'REGISTERED', 1), ('20.3', 'ROUTER', 1), ('6.254', 'CLUSTER_HEAD', 1), ('16.1', 'ROUTER', 1), ('16.3', 'REGISTERED', 1)]",[],[]
+85,REGISTERED,20.6,"[('16.1', 'ROUTER', 1), ('20.254', 'CLUSTER_HEAD', 1), ('20.3', 'ROUTER', 1), ('20.5', 'REGISTERED', 1), ('6.254', 'CLUSTER_HEAD', 1), ('6.1', 'REGISTERED', 1)]",[],[]
+86,CLUSTER_HEAD,20.254,"[('16.1', 'ROUTER', 1), ('16.2', 'REGISTERED', 1), ('20.1', 'REGISTERED', 1), ('20.2', 'REGISTERED', 1), ('20.3', 'ROUTER', 1), ('20.4', 'REGISTERED', 1), ('20.5', 'REGISTERED', 1), ('20.6', 'REGISTERED', 1)]","[('20.1', 76), ('20.2', 87), ('20.3', 95), ('20.4', 77), ('20.5', 96), ('20.6', 85)]","[(6, '20.3', 'VALID')]"
+87,REGISTERED,20.2,"[('20.1', 'REGISTERED', 1), ('20.254', 'CLUSTER_HEAD', 1), ('20.4', 'REGISTERED', 1), ('13.1', 'ROUTER', 1), ('13.2', 'REGISTERED', 1)]",[],[]
+88,ROUTER,13.1,"[('20.2', 'REGISTERED', 1), ('13.254', 'CLUSTER_HEAD', 1), ('14.1', 'REGISTERED', 1), ('14.254', 'CLUSTER_HEAD', 1), ('13.2', 'REGISTERED', 1), ('14.2', 'REGISTERED', 1)]",[],[]
+89,REGISTERED,14.2,"[('13.1', 'ROUTER', 1), ('13.254', 'CLUSTER_HEAD', 1), ('14.254', 'CLUSTER_HEAD', 1), ('14.1', 'REGISTERED', 1), ('13.2', 'REGISTERED', 1)]",[],[]
+90,REGISTERED,7.2,"[('7.1', 'ROUTER', 1), ('7.254', 'CLUSTER_HEAD', 1), ('7.4', 'REGISTERED', 1)]",[],[]
+91,REGISTERED,7.4,"[('7.254', 'CLUSTER_HEAD', 1), ('7.1', 'ROUTER', 1), ('7.2', 'REGISTERED', 1), ('8.254', 'CLUSTER_HEAD', 1), ('8.1', 'REGISTERED', 1)]",[],[]
+92,REGISTERED,8.1,"[('7.1', 'ROUTER', 1), ('7.4', 'REGISTERED', 1), ('8.254', 'CLUSTER_HEAD', 1)]",[],[]
+93,KILLED,,,,
+94,CLUSTER_HEAD,6.254,"[('20.3', 'ROUTER', 1), ('20.6', 'REGISTERED', 1), ('6.1', 'REGISTERED', 1)]","[('6.1', 84)]",[]
+95,ROUTER,20.3,"[('20.254', 'CLUSTER_HEAD', 1), ('20.5', 'REGISTERED', 1), ('20.6', 'REGISTERED', 1), ('6.1', 'REGISTERED', 1), ('6.254', 'CLUSTER_HEAD', 1)]",[],[]
+96,REGISTERED,20.5,"[('20.254', 'CLUSTER_HEAD', 1), ('20.3', 'ROUTER', 1), ('20.6', 'REGISTERED', 1)]",[],[]
+97,KILLED,,,,
+98,CLUSTER_HEAD,14.254,"[('13.1', 'ROUTER', 1), ('14.1', 'REGISTERED', 1), ('14.2', 'REGISTERED', 1)]","[('14.1', 99), ('14.2', 89)]",[]
+99,REGISTERED,14.1,"[('13.1', 'ROUTER', 1), ('14.254', 'CLUSTER_HEAD', 1), ('14.2', 'REGISTERED', 1)]",[],[]
