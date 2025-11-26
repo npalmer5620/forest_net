@@ -5,10 +5,15 @@ The vast majority of the code is located in wsnlab/source/sensor_node.py which c
 - PROBE and HEARTBEAT packets to advertise capabilities and roles, populate negihbor tables and allows nodes to test if neighbors are alive.
 - Hybrid routing protocol, n-hop mesh with AODV type (ROUTE REQ, ROUTE RESP) to discovery 2 hop neighbors. Note: that > 1 hop does not function correctly, I focused on getting tree routing working properly and using local mesh inbetween.
 - Tree routing is functional, Cluster Heads learn routes via NETID_REQ and NETID_RESP packets and stores this info in child networks tables.
-- Routers exist as bridges between pairs of Cluster Heads, witout the additional metadata and overhead of maintaining members and child networks tables. A Cluster Head will see if any of its members can be promoted to CH and if we can promote to a router. 
+- Routers exist as bridges between pairs of Cluster Heads, without the additional metadata and overhead of maintaining members and child networks tables. A Cluster Head will see if any of its members can be promoted to CH and if we can promote to a router via the "CH_PROMOTE" packet which gets sent to members when a CH wants to promote it and becomes a router.
 - Here is an example of a built network (image):
 ![](image/formed.png)
-
+- Here is an example of a network that kills 5 nodes at random after a few additional time has passed and the network has formed:
+![](image/5_nodes.png)
+- Config parameters are available in the config.py file to modify child nodes per cluster (SIM_MAX_CHILDREN), and tx power levels (by distance) are also specifiable (NODE_TX_RANGES). The number of nodes can also be reduced, and intervals for heartbeats, probes, etc. are all tunable.
+- Packet loss is also configurable via PACKET_LOSS_PROB in config.py.
+- Cluster optimization is performed via routers and nodes trying to join the optimal cluster head, currently this is based on rx (distance), but there is code for using distance from root which did not work very well.
+- The battery usage is also modeled, we approximate the energy per packet via the "_estimate_packet_size_bytes" function and assume a fixed bytes per packet field. The min battery, max battery, and average battery is printed at the end of the sim run (shown below).
 
 # Instructions to Run the Code
 There are several options available to run the code, note the code was developed with Python 3.13.9 and a venv is probably necessary.

@@ -7,9 +7,10 @@ NODE_TX_RANGES = [25, 50, 75, 120]  # discrete tx ranges of nodes
 NODE_ARRIVAL_MAX = 50  # max time to wake up
 
 ## simulation properties
+PACKET_LOSS_PROB = 0.0001 # probability to drop a packet
 SIM_MAX_CHILDREN = 254  # max children per cluster head
 SIM_MAX_NETWORKS = 253  # max child networks (2 through 254, root is 1)
-SIM_NODE_COUNT = 100  # noce count in simulation
+SIM_NODE_COUNT = 50  # noce count in simulation
 SIM_NODE_PLACING_CELL_SIZE = 75  # cell size to place one node
 SIM_DURATION = 5000  # simulation Duration in seconds
 SIM_TIME_SCALE = 0.1  #  The real time dureation of 1 second simualtion time
@@ -21,7 +22,7 @@ VISUAL_DRAW_LINKS = True  # toggle drawing of parent/router links
 VISUAL_TIME_UPDATE_INTERVAL = 0.5
 TRACE_PATHS = True
 
-## application properties
+## params
 CH_PROMOTE_TIMEOUT = 10
 HEARTH_BEAT_TIME_INTERVAL = 1 # heartbeat/parent check interval
 MEMBER_STALE_INTERVAL = HEARTH_BEAT_TIME_INTERVAL * 3 # how long before a member is considered stale
@@ -33,7 +34,6 @@ ROUTING_MAX_HOPS = 20  # hop limit to avoid routing loops
 JOIN_REJECT_BACKOFF = 10 # how long to wait before retrying a parent that denied join
 TIMER_JOIN_REQ_INTERVAL = 1 # how often to resend join requests
 SENSOR_BASE_INTERVAL = 10  # baseline interval for sensor reports
-PACKET_LOSS_PROB = 0.0001 # probability to drop a packet
 ROUTERABLE_CHECK_INTERVAL = 20  # how often to check if node can become a router
 TABLE_MAINT_INTERVAL = 5  # how often to check and maintain routing table
 
