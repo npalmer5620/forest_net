@@ -7,6 +7,7 @@ import csv
 from roles import Roles
 from tracking_containers import *
 from sim_main import sim
+from source import config
 
 # write node distances to csv
 def write_node_distances_csv(path="logs/node_distances.csv"):
@@ -76,10 +77,12 @@ def write_join_times_csv(path="logs/join_times.csv"):
                 f"{latency:.6f}" if latency is not None else "",
             ])
 
-# get average join time for all nodes that completed join
+# get average join time for all non-root nodes that completed join
 def get_average_join_time():
     durations = []
     for nid, end_time in JOIN_COMPLETE_TIMES.items():
+        if nid == ROOT_ID:  # skip root
+            continue
         start_time = JOIN_START_TIMES.get(nid)
         if start_time is None:
             continue
@@ -90,10 +93,12 @@ def get_average_join_time():
 
     return sum(durations) / len(durations), len(durations)
 
-# get min, avg, max, count of join times
+# get min, avg, max, count of join times (skip root)
 def get_join_time_stats():
     durations = []
     for nid, end_time in JOIN_COMPLETE_TIMES.items():
+        if nid == ROOT_ID:
+            continue
         start_time = JOIN_START_TIMES.get(nid)
         if start_time is None:
             continue
@@ -120,11 +125,15 @@ def write_packet_deliveries_csv(path="logs/packet_deliveries.csv"):
             "delay",
             "hop_count",
             "path",
+            "path_dynamic",
         ])
 
+        # write entries for packet delivery logs
         for entry in entries:
             path_list = entry.get("path", [])
             path_str = "->".join(str(x) for x in path_list) if path_list else ""
+            path_dynamic_list = entry.get("path_dynamic", [])
+            path_dynamic_str = "->".join(str(x) for x in path_dynamic_list) if path_dynamic_list else ""
             w.writerow([
                 entry.get("seq_no"),
                 entry.get("type"),
@@ -136,6 +145,7 @@ def write_packet_deliveries_csv(path="logs/packet_deliveries.csv"):
                 f"{entry.get('delay', 0):.6f}" if entry.get("delay") is not None else "",
                 entry.get("hop_count"),
                 path_str,
+                path_dynamic_str,
             ])
 
 # format address for output
@@ -149,9 +159,15 @@ def format_addr(addr):
 # write node tables summary to csv
 def write_node_tables_csv(path="logs/node_tables.csv"):
     nodes = sorted(ALL_NODES, key=lambda n: n.id)
+
+    def get_battery_pct(node):
+        battery_mj = getattr(node, "battery_mj", 0)
+        mah = battery_mj / (config.BATTERY_VOLTAGE * 3600)
+        return (mah / max(config.BATTERY_CAPACITY_MAH, 1e-9)) * 100
+
     with open(path, "w", newline="") as f:
         w = csv.writer(f)
-        w.writerow(["node_id", "role", "addr", "neighbors", "members", "child_networks"])
+        w.writerow(["node_id", "role", "addr", "ch_addr", "battery_pct", "downstream_ch_addr", "neighbors", "members", "child_networks"])
 
         for node in nodes:
             node_id = node.id
@@ -162,15 +178,23 @@ def write_node_tables_csv(path="logs/node_tables.csv"):
             if not is_alive:
                 role_name = "KILLED"
                 addr = ""
+                ch_addr = ""
+                battery_pct = ""
+                downstream_ch_addr = ""
                 neighbors_str = ""
                 members_str = ""
                 child_nets_str = ""
             else:
                 role_name = role.name if role else "UNKNOWN"
-                if role is not None and (role == Roles.CLUSTER_HEAD or role == Roles.ROOT):
-                    addr = format_addr(getattr(node, "ch_addr", None))
+                addr = format_addr(getattr(node, "addr", None))
+                ch_addr = format_addr(getattr(node, "ch_addr", None))
+                battery_pct = f"{get_battery_pct(node):.2f}"
+
+                # downstream CH addr for routers
+                if role == Roles.ROUTER:
+                    downstream_ch_addr = format_addr(getattr(node, "downstream_ch_addr", None))
                 else:
-                    addr = format_addr(getattr(node, "addr", None))
+                    downstream_ch_addr = ""
 
                 neighbors_table = getattr(node, "neighbors_table", {})
                 neighbors_str = str([
@@ -198,4 +222,4 @@ def write_node_tables_csv(path="logs/node_tables.csv"):
                 else:
                     child_nets_str = "[]"
 
-            w.writerow([node_id, role_name, addr, neighbors_str, members_str, child_nets_str])
+            w.writerow([node_id, role_name, addr, ch_addr, battery_pct, downstream_ch_addr, neighbors_str, members_str, child_nets_str])
