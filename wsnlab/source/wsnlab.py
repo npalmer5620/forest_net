@@ -5,6 +5,7 @@ Based on wsnsimpy library. Timers, Network address and Sleep mode are included b
 import bisect
 import inspect
 import random
+import sys
 import simpy
 from simpy.util import start_delayed
 from . import config
@@ -194,6 +195,13 @@ class Node:
         """
         if self.logging:
             print(f"Node {'#' + str(self.id):4}[{self.now:10.5f}] {msg}")
+
+    ############################
+    def exit_sim(self, reason=""):
+        """exit the sim immediately"""
+        if reason:
+            self.log(f"EXIT: {reason}")
+        raise SystemExit(reason or 0)
 
     ############################
     def can_receive(self, pck):
