@@ -20,24 +20,29 @@ from csv_utils import (
 from sim_main import sim
 from time import perf_counter
 
+FAILURE_DELAY = getattr(config, "KILL_TIME", config.NODE_ARRIVAL_MAX + 100)
+NUM_FAILURES = max(int(getattr(config, "NODES_TO_KILL", 5)), 0)
+
 def print_battery_report():
     if not ALL_NODES:
         return
+
     def to_mAh(n): return n.battery_mj / (config.BATTERY_VOLTAGE * 3600)
 
-    levels = [(n, to_mAh(n)) for n in ALL_NODES]
+    levels = [(n, to_mAh(n)) for n in ALL_NODES
+              if n.id != ROOT_ID and to_mAh(n) / config.BATTERY_CAPACITY_MAH > 0.01]
     total = sum(v for _, v in levels)
     avg = total / len(levels)
 
     min_node, min_mah = min(levels, key=lambda t: t[1])
     max_node, max_mah = max(levels, key=lambda t: t[1])
 
-    denom = max(config.BATTERY_CAPACITY_MAH, 1e-9)
-    to_pct = lambda mAh: (mAh / denom) * 100
+    to_pct = lambda mAh: (mAh / max(config.BATTERY_CAPACITY_MAH, 1e-9)) * 100
 
     print(f"Min bat: {min_mah:.2f} mAh ({to_pct(min_mah):.2f}%) - uid={min_node.id}, addr={getattr(min_node, 'addr', None)}")
     print(f"Max bat: {max_mah:.2f} mAh ({to_pct(max_mah):.2f}%) - uid={max_node.id}, addr={getattr(max_node, 'addr', None)}")
     print(f"Avg bat: {avg:.2f} mAh ({to_pct(avg):.2f}%)")
+
 
 def create_network(node_class, number_of_nodes=100):
     edge = math.ceil(math.sqrt(number_of_nodes))
@@ -57,6 +62,37 @@ def create_network(node_class, number_of_nodes=100):
         if node.id == ROOT_ID:
             node.arrival = 0.1
 
+
+def schedule_random_failure(delay=FAILURE_DELAY, num_failures=1):
+    if num_failures <= 0:
+        return
+
+    def kill_multiple():
+        candidates = [
+            n for n in ALL_NODES
+            if getattr(n, "role", None) in (Roles.CLUSTER_HEAD, Roles.ROUTER) and getattr(n, "is_alive", True)
+        ]
+        victims = random.sample(candidates, min(num_failures, len(candidates)))
+        for victim in victims:
+            victim.kill_all_timers()
+            victim.is_alive = False
+            victim.battery_mj = 0
+            victim.sleep()
+            try:
+                victim.clear_tx_range()
+            except Exception:
+                pass
+            try:
+                victim.erase_parent()
+            except Exception:
+                pass
+            victim.scene.nodecolor(victim.id, 0.5, 0.5, 0.5)
+            role_name = getattr(victim, "role", Roles.UNDISCOVERED).name
+            victim.log(f"removing {role_name} uid={victim.id} at t={sim.env.now:.2f}")
+
+    sim.delayed_exec(delay, kill_multiple)
+
+
 # creating random network
 create_network(SensorNode, config.SIM_NODE_COUNT)
 root_pos = NODE_POS.get(ROOT_ID)
@@ -65,6 +101,13 @@ print(f"root id={ROOT_ID}, pos={root_pos}, nodes={config.SIM_NODE_COUNT}, tx_ran
 # write initial node distances
 write_node_distances_csv()
 write_node_distance_matrix_csv()
+
+# schedule removal of nodes after time to form
+if NUM_FAILURES > 0:
+    print(f"{NUM_FAILURES} node failure(s) at t={FAILURE_DELAY}")
+    schedule_random_failure(num_failures=NUM_FAILURES)
+else:
+    print("node failures disabled (NODES_TO_KILL=0)")
 
 if __name__ == "__main__":
     # start the simulation
