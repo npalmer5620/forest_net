@@ -591,13 +591,14 @@ class SensorNode(wsn.Node):
                     
                     # unknown member
                     else:
+                        # check if the uid is in the members table, if not send a NACK
                         is_known_uid = any(m.uid == uid for m in self.members_table.values() if m)
                         
-                        if is_known_uid:
-                            self.log(f"uid {uid} moved to {member_addr} without re-join, ignoring")
-                        else:
-                            self.log(f"unknown member {uid} at {member_addr}, sending NACK")
+                        if not is_known_uid:
+                            # self.log(f"unknown member {uid} at {member_addr}, sending NACK")
                             self.send_join_nack(uid)
+                        else:
+                            self.log(f"uid {uid} moved to {member_addr} without re-join, ignoring")
 
             # read advertised neighbors to build neighbor table
             neighbor_list = pck.get('neighbors', [])
@@ -1225,7 +1226,6 @@ class SensorNode(wsn.Node):
     def route_and_forward_package(self, pck, use_mesh=True):
         dst = pck.get('dst_addr')
         prev_hop = pck.get('last_router')
-
         # if broadcast send directly
         if dst == wsn.BROADCAST_ADDR:
             pck['next_hop_addr'] = wsn.BROADCAST_ADDR

@@ -1,15 +1,14 @@
 ## simulation properties
 ENABLE_ROUTERS = True # enable routers
 TREE_ONLY = False # use tree routing only
-NEIGHBOR_HOP_LIMIT = 2 # max hops to keep in neighbor table
-PACKET_LOSS_PROB = 0.001 # probability to drop a packet
+NEIGHBOR_HOP_LIMIT = 5 # max hops to keep in neighbor table
+PACKET_LOSS_PROB = 0.01 # probability to drop a packet
 SIM_MAX_CHILDREN = 253 # max children per cluster head [3, 253]
 SIM_MAX_NETWORKS = 253 # max child networks [2, 253]
 SENSOR_DATA_TO_ROOT = False # True=send to root, False=random node
 
 
 # events
-NODE_ARRIVAL_MAX = 50 # max time for nodes to wake at
 NODES_TO_KILL = 0 # number of nodes to kill during the kill event
 KILL_DELAY = 50 # delay after NODE_ARRIVAL_MAX to kill nodes
 NODES_REVIVE = False # bring killed nodes back?
@@ -17,7 +16,8 @@ REVIVE_DELAY = 100 # delay after kill before reviving nodes
 
 
 # simulation
-SIM_NODE_COUNT = 50 # node count in simulation
+SIM_NODE_COUNT = 100 # node count in simulation
+NODE_ARRIVAL_MAX = 50 # max time for nodes to wake at
 SIM_NODE_PLACING_CELL_SIZE = 75 # cell size to place one node
 SIM_DURATION = 1000 # simulation duration in seconds
 SIM_TIME_SCALE = 0.01 # real time duration of 1 second simulation time
@@ -52,8 +52,7 @@ EXPORT_CH_CSV_INTERVAL = 10 # simulation time units
 EXPORT_NEIGHBOR_CSV_INTERVAL = 10 # simulation time units
 JOIN_REJECT_BACKOFF = 5 # how long to wait before retrying a parent that denied join
 TIMER_JOIN_REQ_INTERVAL = 1 # how often to resend join requests
-SENSOR_BASE_INTERVAL = 1 # interval for sensor packets
-SENSOR_DATA_TO_ROOT = True  # True=send to root (1.254), False=random node
+SENSOR_BASE_INTERVAL = 0.1 # interval for sensor packets
 ROUTERABLE_CHECK_INTERVAL = 10 # how often to check if node can become a router
 TABLE_MAINT_INTERVAL = 2 # how often to check and maintain routing table
 PARENT_SWITCH_HYSTERESIS = 0.01 # require % improvement in rx_cost to switch parents

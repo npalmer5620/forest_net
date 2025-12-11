@@ -58,12 +58,14 @@ def schedule_random_failure(delay=KILL_TIME, num_failures=1):
         ]
         victims = random.sample(candidates, min(num_failures, len(candidates)))
         for victim in victims:
-            # store battery level before kill
+            # store battery level before kill so we can bring it back
             killed_nodes.append((victim, victim.battery_mj))
             victim.kill_all_timers()
             victim.is_alive = False
             victim.battery_mj = 0
             victim.sleep()
+
+            # werid stuff here 
             try:
                 victim.clear_tx_range()
             except Exception:
@@ -76,7 +78,7 @@ def schedule_random_failure(delay=KILL_TIME, num_failures=1):
             role_name = getattr(victim, "role", Roles.UNDISCOVERED).name
             victim.log(f"removing {role_name} uid={victim.id} at t={sim.env.now:.2f}")
 
-        # schedule revival if enabled
+        # schedule revival
         if getattr(config, "NODES_REVIVE", False) and killed_nodes:
             revive_delay = getattr(config, "REVIVE_DELAY", 50)
             sim.delayed_exec(revive_delay, revive_nodes)
@@ -162,7 +164,7 @@ if __name__ == "__main__":
     if hops:
         print(f"avg hops to root: {sum(hops)/len(hops):.2f} (n={len(hops)})")
 
-    # finalize roles
+    # finalize roles and battery usage
     for node in ALL_NODES:
         role = getattr(node, 'role', None)
         if role is not None and hasattr(node, 'battery_mj'):
@@ -187,6 +189,7 @@ if __name__ == "__main__":
         if role not in role_stats:
             continue
         stats = role_stats[role]
+        # if we have data
         if stats['time'] > 0:
             total_energy_mj = stats['energy']
             total_energy_j = total_energy_mj / 1000
@@ -202,6 +205,7 @@ if __name__ == "__main__":
     # compute average battery remaining by role
     role_batteries = defaultdict(list)
     for node in ALL_NODES:
+        # if node is alive and not root and has battery data
         if getattr(node, 'is_alive', True) and node.id != ROOT_ID and hasattr(node, 'battery_mj'):
             role = getattr(node, 'role', None)
             if role is not None:
@@ -213,6 +217,7 @@ if __name__ == "__main__":
         if role not in role_batteries:
             continue
         batteries = role_batteries[role]
+        # if we have data
         if batteries:
             avg_bat = sum(batteries) / len(batteries)
             pct = (avg_bat / config.BATTERY_CAPACITY_MAH) * 100
