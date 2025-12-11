@@ -61,7 +61,7 @@ PARENT_SWITCH_HYSTERESIS = 0.01 # require % improvement in rx_cost to switch par
 REJOIN_COOLDOWN = 1 # seconds after rejoining before checking for better parents
 BROADCAST_NET_ADDR = 255 # broadcast network address
 BROADCAST_NODE_ADDR = 255 # broadcast node address
-ROUTING_MAX_HOPS = 100 # hop limit to avoid routing loops
+ROUTING_MAX_HOPS = 500 # hop limit to avoid routing loops
 NODE_TX_RANGES = [25, 50, 75, 120]  # discrete tx ranges of nodes
 
 
