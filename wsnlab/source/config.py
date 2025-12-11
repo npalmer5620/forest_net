@@ -20,7 +20,7 @@ REVIVE_DELAY = 100 # delay after kill before reviving nodes
 NODE_ARRIVAL_MAX = 50 # max time for nodes to wake at
 SIM_NODE_PLACING_CELL_SIZE = 75 # cell size to place one node
 SIM_DURATION = 1000 # simulation duration in seconds
-SIM_TIME_SCALE = 0.01 # real time duration of 1 second simulation time
+SIM_TIME_SCALE = 0.002 # real time duration of 1 second simulation time
 SIM_TERRAIN_SIZE = (650, 650) # terrain size
 SIM_TITLE = 'ForestNet' # title of visualization window
 SIM_VISUALIZATION = True # visualization active
@@ -66,7 +66,7 @@ NODE_TX_RANGES = [25, 50, 75, 120]  # discrete tx ranges of nodes
 
 
 def print_key_settings():
-    print("simulation:")
+    print("\nsimulation:")
     print(f"ENABLE_ROUTERS={ENABLE_ROUTERS}, TREE_ONLY={TREE_ONLY}, SENSOR_DATA_TO_ROOT={SENSOR_DATA_TO_ROOT}")
     print(f"NEIGHBOR_HOP_LIMIT={NEIGHBOR_HOP_LIMIT}, PACKET_LOSS_PROB={PACKET_LOSS_PROB}")
     print(f"SIM_MAX_CHILDREN={SIM_MAX_CHILDREN}, SIM_MAX_NETWORKS={SIM_MAX_NETWORKS}")

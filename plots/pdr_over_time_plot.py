@@ -37,7 +37,7 @@ def plot():
 
     times, pdrs = load_series(csv_path)
     # only show samples after certain time
-    clipped = [(t, p) for t, p in zip(times, pdrs) if t >= 25]
+    clipped = [(t, p) for t, p in zip(times, pdrs) if t >= 50]
     if clipped:
         times, pdrs = zip(*clipped)
         times = list(times)
