@@ -3,6 +3,8 @@ import sys
 sys.path.insert(1, '.')
 from source import wsnlab_vis as wsn
 import math
+import copy
+import random
 from source import config
 from collections import Counter
 import csv
@@ -11,56 +13,20 @@ from roles import Roles
 from tracking_containers import *
 from csv_utils import write_clusterhead_distances_csv
 
-from dataclasses import dataclass
+from table_entries import *
 
-@dataclass(frozen=True, slots=True)
-class NodeCapabilities:
-    CAPABLE_CLUSTER_HEAD: bool = False
-    CAPABLE_ROUTER: bool = False
-    CAPABLE_ROOT_NODE: bool = False
-    CAPABLE_GATEWAY: bool = False
-
-# Neighbor Table entry data class
-@dataclass(slots=True)
-class NeighborTableEntry: # indexed by dynamic address
-    uid: int | None # uid of the neighbor node
-    nextHopAddr: wsn.Addr # address of next hop en route to nodeAddr (NET.NODE)
-    hops: int  # hop count to reach this nodeAddr
-    capabilities: NodeCapabilities | None  # capability Flags
-    role: Roles | None # role
-    lastHeard: float  # timesteps we last heard the node active
-    rx_cost: float  # distance to next hop node
-    path_cost: float | None = None  # cumulative cost to root advertised by this neighbor
-    join_rejected_until: int = 0  # reject rejoin attempts to this neighbor until this time
-
-# Member Table entry data class
-@dataclass(slots=True)
-class MemberTableEntry: # indexed by dynamic address
-    uid: int  # uid of the member node
-    renewal_valid: bool  # HIGH=Address renewal valid, LOW=Address renewal not valid (in progress)
-    ack_seq_no: int  # last acknowledged sequence number, for renewal validation
-    expiry_time: float  # time until which the membership is valid
-    tx_power_level: int
-
-# Child Network Table entry data class
-@dataclass(slots=True)
-class ChildNetworkEntry: # indexed by network id
-    next_hop_addr: wsn.Addr # address of next hop en route to child network
-    hops: int # hop count to reach this child network
-    net_state: str # state "VALID", "PENDING", "STALE"
-    last_heard: float  # timestamp of last heard from child network
-    ack_seq_no: int  # seq number of NETID_RESP pending validation
-    requester_uid: int  # uid of node requesting/owning this network
+BATTERY_CAPACITY_MJ = config.BATTERY_CAPACITY_MAH * 3.0 * 3600
 
 # for energy calc
 def _estimate_packet_size_bytes(pck: dict) -> int:
     base = 64
-    per_field = 4 # bytes per field
+    per_field = 4  # bytes per field
     field_count = sum(1 for key in pck.keys() if pck[key] is not None)
-    return base + per_field * max(field_count, 0)
+    mac_bytes = base + per_field * max(field_count, 0)
+    return mac_bytes + 6  # N + 6 phy
 
 class SensorNode(wsn.Node):
-    # Initialization of SensorNode
+    # init of SensorNode
     def init(self):
         super().init()
         self.scene.nodecolor(self.id, 1, 1, 1)  # sets self color to white
@@ -71,7 +37,7 @@ class SensorNode(wsn.Node):
         self.is_root_eligible = True if self.id == ROOT_ID else False  # only one node is root eligible
 
         # CLUSTER HEAD
-        self.ch_addr: wsn.Addr = None  # our cluster head address (if we are cluster head, this is our (x.254) address)
+        self.ch_addr: wsn.Addr = None  # our cluster head address (our (x.254) address)
         self.tx_range_shape = None
 
         # REGISTERED/CLUSTER HEAD/ROUTER
@@ -93,61 +59,81 @@ class SensorNode(wsn.Node):
         self.is_root_eligible = True if self.id == ROOT_ID else False  # only one node is root eligible
         self.c_probe = 0  # c means counter and probe is the name of counter
         self.th_probe = len(config.NODE_TX_RANGES) * 6  # 6 messages per power level (CH, CM, router)
-        self.hop_count = 99999  # hop count to root, initialized to a large number
+        self.hops_to_root = 99999  # hops to root, initialized to large number
         self.probes_sent = 0  # number of probes sent
 
-        self.tx_power_level = 0  # transmission power level,
+        self.tx_power_level = 0  # transmission power level
         self.tx_range = config.NODE_TX_RANGES[self.tx_power_level] # set initial tx range
 
         self.seq_no = 0  # monotonic packet sequence number (wraps at 2^16)
         self.path_cost = None  # cumulative cost to root (rx_cost sum)
 
         # energy stuff
-        self.battery_mj = config.BATTERY_CAPACITY_MJ
+        self.battery_mj = BATTERY_CAPACITY_MJ
         self.is_alive = True
 
-        # ad hoc routing
-        self.broadcast_id = 0 # our id for routing requests
-        self.rreq_seen = set() # (addr, rreq_id) tuples of seen RREQs
-        self.pending_route_discovery = set() # prevent RREQs for the same target
+        # promotion tracking
+        self.promotion_completed_at = None  # ts when promotion to CH completed
+        self.last_registered_at = None  # ts when joined/rejoined (cooldown)
+
+        # ad hoc routing / promotion
         self.pending_ch_promotion = None  # track in-flight CH promotion (seq, target)
         self.last_parent_check = 0
         self.parent_set_time = 0
         self.router_links = set()  # uids of CHs we draw bridge lines to
 
-        # debug counters
-        self.debug_promote_attempts = 0
-        self.debug_last_promote_log = 0
-        self.debug_last_parent_hb_log = -999
+        # metadata
         self.last_join_target: wsn.Addr | None = None  # last join attempt destination
-        self.last_join_time: float = 0
-        self.heartbeat_counter = 0  # tracks heartbeat invocations for periodic maintenance
+        self.last_join_target_uid: int | None = None  # uid of last join target
+        self.last_join_time: float = 0 # ts of last join attempt
+        self.heartbeat_counter = 0  # tracks heartbeats
+        self.forwarded_packets = set()  # (src_addr, seq_no) 
 
+    # easy way to get all addresses for this node
+    @property
+    def my_addresses(self):
+        addrs = {self.addr}
+    
+        if (self.role in [Roles.CLUSTER_HEAD, Roles.ROOT] and self.ch_addr is not None):
+            addrs.add(self.ch_addr)
+        
+        return addrs
+
+    # build a common packet
     def build_common_packet(self, p_type="NULL", ack=False, dst_addr=wsn.BROADCAST_ADDR,
                             add_roles=False, add_capabilities=False):
-        # if we are a cluster head (or root), our source address should be our CH address
         src_addr = self.addr
-        if self.role is Roles.CLUSTER_HEAD or self.role is Roles.ROOT:
-            src_addr = self.ch_addr
+        if self.role in [Roles.CLUSTER_HEAD, Roles.ROOT]:
+            # if the dst is a child of this node, use the CH address
+            if self.members_table.get(dst_addr) is not None:
+                src_addr = self.ch_addr
+            # or if we are broadcasting as a CH, use the CH address
+            elif dst_addr == wsn.BROADCAST_ADDR:
+                src_addr = self.ch_addr
 
-        # build common packet fields for this node
+        # assign packet seqno, build packet fields for this node
+        packet_seq_no = self.seq_no
+        self.seq_no = (self.seq_no + 1) % (2**16)
         packet = {
             'type': p_type,
-            'addr_type': 0,  # 0/1 for standard/extended addressing (0 for now)
+            'addr_type': 0, # 0/1 for standard/extended addressing (0 for now)
             'ack': ack, # ack back flag
-            'hop_count': 0,  # hop count of packet, router will increment this when we send
+            'hop_count': 0, # hop count of packet
+            'use_mesh': not config.TREE_ONLY, # allow mesh routing?
 
-            'seq_no': -1, # packet sequence number, filled in after send
+            'seq_no': packet_seq_no, # packet sequence number
 
             'dst_addr': dst_addr, # destination address
-            'next_hop_addr': None, # next hop address (filled in by routing)
+            'next_hop_addr': None, # next hop address
             'src_addr': src_addr, # source address
 
-            # tracking fields
-            'origin_uid': self.id,  # origin uid for tracing
-            'created_time': self.now,  # trace latency from creation
-            'path': [self.id]  # path trace seeded with sender
+            # DEBUG TRACKING FIELDS
+            'origin_uid': self.id, # id of the node that originated the packet
+            'created_time': self.now,
+            'path': [],
+            'path_dynamic': [],
         }
+
 
         # add role attributes if requested
         if add_roles:
@@ -155,70 +141,67 @@ class SensorNode(wsn.Node):
         if add_capabilities:
             packet.update({
                 'capabilities': NodeCapabilities(
-                    CAPABLE_CLUSTER_HEAD=True,  # all nodes can be cluster heads
-                    CAPABLE_ROUTER=True,  # all nodes can be routers
-                    CAPABLE_ROOT_NODE=(self.role == Roles.ROOT),  # only root node is capable root
-                    CAPABLE_GATEWAY=(self.role == Roles.ROOT),  # only root node is capable gateway
+                    CAPABLE_CLUSTER_HEAD=True, # all nodes can be cluster heads
+                    CAPABLE_ROUTER=True, # all nodes can be routers
+                    CAPABLE_ROOT_NODE=(self.role == Roles.ROOT), # only root node can be root or gateway
+                    CAPABLE_GATEWAY=(self.role == Roles.ROOT),
+                    joinable=self.is_joinable(), # advertised joinable?
                 )
             })
 
-        packet.update({'use_mesh': True})
-        packet.update({'use_tree': True})
+        return packet, packet_seq_no
 
-        return packet
-
-    # check if packet should be dropped due to missing fields
+    # check if packet should be dropped on rx
     def _should_drop_packet(self, pck):
-        p_type = pck.get('type', None)
-        dst_addr = pck.get('dst_addr', None)
-        next_hop_addr = pck.get('next_hop_addr', None)
+        p_type = pck.get('type')
+        dst_addr = pck.get('dst_addr')
+        next_hop = pck.get('next_hop_addr')
 
-        # missing type or destination
+        # bad packet, drop
         if p_type is None or dst_addr is None:
-            self.log(f"dropping packet with missing type or dst_addr: type={p_type} dst={dst_addr}")
+            self.log(f"DROP: malformed packet. type={p_type}")
             return True
 
         # ttl exceeded, drop
         if pck.get('hop_count', 0) >= config.ROUTING_MAX_HOPS:
-            self.log(f"ttl exceeded {config.ROUTING_MAX_HOPS} type={pck.get('type')}"
-                     f" uid={pck.get('uid')} dst={pck.get('dst_addr', -1)} path={pck.get('path')}")
+            self.log(f"DROP: ttl exceeded, hops={pck.get('hop_count')}")
             return True
 
-        # if next hop is set, and it's not us, drop
-        if next_hop_addr is not None:
-            # drop only if it's not equal to ANY of our addresses
-            if next_hop_addr not in (self.addr, self.ch_addr, self.root_addr, wsn.BROADCAST_ADDR):
+        # if next hop is set and it's not us, drop
+        if next_hop is not None:
+            if next_hop != wsn.BROADCAST_ADDR and next_hop not in self.my_addresses:
                 return True
 
         return False
 
-    # check if packet is for us or if we should try to forward it
-    def _is_packet_at_destination(self, pck):
-        dest = pck.get('dst_addr', None)
+    # check if packet is for us or if we should forward it
+    def _is_packet_at_destination(self, pck, *, log: bool = False):
+        dest = pck.get('dst_addr')
 
         # broadcast is for us
         if dest == wsn.BROADCAST_ADDR:
             return True
 
         # destination is us, then it's for us
-        if self.addr is not None and dest == self.addr:
-            return True
-        if self.ch_addr is not None and dest == self.ch_addr:
-            return True
-        if self.root_addr is not None and dest == self.root_addr:
+        if dest in self.my_addresses:
+            if log:
+                self.log(f"Packet for us: {pck}")
             return True
 
-        # network broadcast to our network (if in same network and node addr is broadcast)
-        if self.addr is not None and dest.net_addr == self.addr.net_addr and dest.node_addr == config.BROADCAST_NODE_ADDR:
-            return True
-        if self.ch_addr is not None and dest.net_addr == self.ch_addr.net_addr and dest.node_addr == config.BROADCAST_NODE_ADDR:
-            return True
-        if self.root_addr is not None and dest.net_addr == self.root_addr.net_addr and dest.node_addr == config.BROADCAST_NODE_ADDR:
-            return True
+        # network broadcast to our network
+        if self.addr is not None and dest.net_addr == self.addr.net_addr:
+            if dest.node_addr == config.BROADCAST_NODE_ADDR:
+                return True
+        
+        # network broadcast to our child network
+        if self.ch_addr is not None and dest.net_addr == self.ch_addr.net_addr:
+            if dest.node_addr == config.BROADCAST_NODE_ADDR:
+                return True
 
-        # if we are here, not for us so we should try to forward
+        # not for us, forward
         return False
 
+    # record a packet delivery to the log
     def record_packet_delivery(self, pck, trace_decision: bool | None = None):
         created = pck.get('created_time')
         if created is None:
@@ -231,6 +214,12 @@ class SensorNode(wsn.Node):
         else:
             stored_path = [path_list]
 
+        path_dynamic_list = pck.get('path_dynamic', [])
+        if isinstance(path_dynamic_list, list):
+            stored_path_dynamic = path_dynamic_list.copy()
+        else:
+            stored_path_dynamic = [path_dynamic_list]
+
         PACKET_DELIVERY_LOGS.append({
             "seq_no": pck.get("seq_no"),
             "type": pck.get("type"),
@@ -242,8 +231,10 @@ class SensorNode(wsn.Node):
             "delay": delivered - created,
             "hop_count": pck.get("hop_count"),
             "path": stored_path,
+            "path_dynamic": stored_path_dynamic,
         })
 
+    # get the tx power level for a distance
     def get_tx_power_level_for_dist(self, distance):
         if distance is None:
             return len(config.NODE_TX_RANGES) - 1
@@ -256,12 +247,14 @@ class SensorNode(wsn.Node):
         # fallback to max
         return len(config.NODE_TX_RANGES) - 1
 
+    # set the tx power level for a distance
     def set_tx_power_for_distance(self, distance):
         level = self.get_tx_power_level_for_dist(distance)
         self.tx_power_level = level
         self.tx_range = config.NODE_TX_RANGES[level]
         return level
 
+    # compute our cumulative path cost to root
     def compute_path_cost(self):
         # recompute our cumulative cost to root using parent path_cost + link cost through the tree
         if self.role == Roles.ROOT:
@@ -277,27 +270,57 @@ class SensorNode(wsn.Node):
         self.path_cost = p_entry.path_cost + p_entry.rx_cost
         return self.path_cost
 
+    # determine if we can accept a new member
+    def is_joinable(self) -> bool:
+        # only cluster heads or root nodes with a CH address can accept members
+        if self.role not in (Roles.CLUSTER_HEAD, Roles.ROOT):
+            return False
+        if self.ch_addr is None:
+            return False
+
+        # check if we can issue a new address
+        return self.get_next_free_node_addr(candidate_uid=None) is not None
+
     # get a neighbors role
     def get_neighbor_role(self, addr: wsn.Addr):
-        # TODO we need to handle if addr is a CH address (x.254), that needs to be documented in the neighbor table or handled here
         entry: NeighborTableEntry = self.neighbors_table.get(addr)
         if entry is None:
             return None
         return entry.role
 
-    # def draw_parent(self):
-    #     # skip parent arrow when upstream is a pure router; routers use bridge links instead
-    #     if self._parent_is_router():
-    #         self.erase_parent()
-    #         return
-    #     super().draw_parent()
-    #
-    # def update_parent_visual(self):
-    #     # Only draw parent arrow when parent is not a pure router
-    #     if self._parent_is_router() or self.parent_gui is None:
-    #         self.erase_parent()
-    #         return
-    #     self.draw_parent()
+    # if if the packet has been seen before, its a duplicate
+    def _is_duplicate_packet(self, pck) -> bool:
+        src_addr = pck.get('src_addr')
+        seq_no = pck.get('seq_no')
+        if src_addr is None or seq_no is None:
+            return False
+        return (src_addr, seq_no) in self.forwarded_packets
+
+    # mark a forwarded packet and remove old packets
+    def _mark_packet_forwarded(self, pck):
+        src_addr = pck.get('src_addr')
+        seq_no = pck.get('seq_no')
+        if src_addr is None or seq_no is None:
+            return
+        self.forwarded_packets.add((src_addr, seq_no))
+        # half the set if it grows too large
+        if len(self.forwarded_packets) > 1000:
+            to_remove = list(self.forwarded_packets)[:500]
+            for item in to_remove:
+                self.forwarded_packets.discard(item)
+
+    # handle battery depletion, exempt root
+    def _handle_battery_death(self, *, reason: str = ""):
+        if self.role == Roles.ROOT:
+            return
+        if not self.is_alive:
+            return
+        self.is_alive = False
+        self.log(f"battery depleted{f" ({reason})" if reason else ""}")
+        self.kill_all_timers()
+        self.clear_tx_range()
+        self.erase_parent()
+        self.scene.nodecolor(self.id, 0.2, 0.2, 0.2)
 
     # send a packet, specify tx power level if desired
     def send(self, pck, tx_level=None):
@@ -305,64 +328,68 @@ class SensorNode(wsn.Node):
         if not self.is_alive:
             return -1
 
-        # drop packet if missing fields
-        if pck.get('dst_addr') is None:
-            self.log(f"not sending packet with missing dst_addr: type={pck.get('type')} uid={pck.get('uid')}")
-            return -1
+        # if our next hope or dst is one of our addresses, overrite to parent
+        existing_next_hop = pck.get('next_hop_addr', None)
+        dst_addr = pck.get('dst_addr')
+        if existing_next_hop is not None and existing_next_hop in self.my_addresses and dst_addr not in self.my_addresses:
+            new_next_hop = self.parent_address if self.parent_address not in self.my_addresses else None
+            if new_next_hop is not None:
+                pck['next_hop_addr'] = new_next_hop
+            else:
+                pck['next_hop_addr'] = None
 
-        # if we got here and our next hop is still none, set to dst
+        # fallback to dst
         if pck.get('next_hop_addr', None) is None:
-            # self.log("warning: packet next_hop_addr not set, defaulting to dst_addr")
+            if pck.get('dst_addr') != wsn.BROADCAST_ADDR:
+                self.log("WARN: packet next_hop_addr not set, defaulting to dst_addr")
             pck['next_hop_addr'] = pck.get('dst_addr')
 
-        # pick tx power to next hop for this packet
+        # pick tx power to next hop for this packet from
         if tx_level is None:
             # broadcast goes out at max power
             if pck.get('dst_addr') == wsn.BROADCAST_ADDR:
                 tx_level = len(config.NODE_TX_RANGES) - 1
             else:
-                # try to size power for the selected next hop/destination
+                # try to size power for the selected neighbor
                 next_hop_addr = pck.get('next_hop_addr', None)
                 if next_hop_addr is not None:
                     entry = self.neighbors_table.get(next_hop_addr, None)
                     if entry is not None:
                         tx_level = self.get_tx_power_level_for_dist(entry.rx_cost)
 
-        # validate/adjust tx level
         try:
             tx_level = int(tx_level)
         except (TypeError, ValueError):
             tx_level = len(config.NODE_TX_RANGES) - 1
 
         # compute energy cost and deduct from battery
-        self.battery_mj -= ((_estimate_packet_size_bytes(pck) * config.TX_ENERGY_PER_BYTE_UJ[tx_level]) + config.TX_OVERHEAD_UJ) / 1000.0
+        if self.role != Roles.ROOT:
+            self.battery_mj -= ((_estimate_packet_size_bytes(pck) * config.TX_ENERGY_PER_BYTE_UJ[tx_level]) + config.TX_OVERHEAD_UJ) / 1000.0
 
-        # did we die?
-        if self.battery_mj <= config.MIN_BATTERY_MJ:
-            self.is_alive = False
-            return -1  # node died, packet not sent
+            # did we die in middle of send?
+            if self.battery_mj <= 0.0:
+                self._handle_battery_death(reason=f"while sending {pck.get('type')}")
+                return -1 # died, packet not sent
 
-        # monotonic sequence number
-        seq_no = self.seq_no
-        pck.update({'seq_no': seq_no})
-        self.seq_no = (seq_no + 1) % (2 ** 16)  # inc and wrap at 65536
-
-        # increase hop count
+        # increase hop count before send
         pck.update({'hop_count': pck.get('hop_count', 0) + 1})
 
-        # stamp the last hop and uid into the packet
-        if self.role is Roles.CLUSTER_HEAD or self.role is Roles.ROOT:
-            pck.update({'last_router': self.ch_addr, 'last_tx_uid': self.id})
-        else:
-            pck.update({'last_router': self.addr, 'last_tx_uid': self.id})
+        link_src_addr = self.addr
+        if self.role in [Roles.CLUSTER_HEAD, Roles.ROOT] and self.ch_addr is not None:
+            link_src_addr = self.ch_addr
+
+        pck.update({'last_router': link_src_addr})
+
+        # grab the list and append info
+        pck['path'].append(self.id)
+        pck['path_dynamic'].append(link_src_addr)
 
         # apply tx range for this packet
         self.tx_power_level = tx_level
         self.tx_range = config.NODE_TX_RANGES[tx_level]
 
         super().send(pck)
-
-        return seq_no
+        return pck.get('seq_no')
 
     # arrival event handler
     def run(self):
@@ -370,8 +397,22 @@ class SensorNode(wsn.Node):
 
     # runs to set the node role
     def set_role(self, new_role, *, recolor=True):
-        # update global role counts
+        # track role history for energy analysis
         old_role = getattr(self, "role", None)
+        if old_role is not None and hasattr(self, 'battery_mj'):
+            # record time and energy
+            if self.id not in ROLE_HISTORY:
+                ROLE_HISTORY[self.id] = []
+            time_in_role = self.now - getattr(self, 'role_start_time', self.now)
+            energy_consumed = getattr(self, 'role_start_battery', self.battery_mj) - self.battery_mj
+            ROLE_HISTORY[self.id].append((old_role, time_in_role, energy_consumed))
+
+        # start tracking new role
+        if hasattr(self, 'battery_mj'):
+            self.role_start_time = self.now
+            self.role_start_battery = self.battery_mj
+
+        # update global role counts
         if old_role is not None:
             ROLE_COUNTS[old_role] -= 1
             if ROLE_COUNTS[old_role] <= 0:
@@ -387,20 +428,16 @@ class SensorNode(wsn.Node):
                 self.scene.nodecolor(self.id, 1, 1, 0)
             elif new_role == Roles.REGISTERED:
                 self.scene.nodecolor(self.id, 0, 1, 0)
-                # parent arrow drawn on join ack
             elif new_role == Roles.CLUSTER_HEAD:
                 self.scene.nodecolor(self.id, 0, 0, 1)
                 self.tx_power_level = len(config.NODE_TX_RANGES) - 1
                 self.tx_range = config.NODE_TX_RANGES[self.tx_power_level]
                 self.draw_tx_range()
-                # parent arrow drawn later via update_parent_visual() after HEART_BEAT confirms parent role
             elif new_role == Roles.ROUTER:
                 self.scene.nodecolor(self.id, 1, 0, 0)
                 self.tx_power_level = len(config.NODE_TX_RANGES) - 1
                 self.tx_range = config.NODE_TX_RANGES[self.tx_power_level]
-                # routers draw bridge links only (no tx range circle)
                 self.clear_tx_range()
-                # self.update_parent_visual()
             elif new_role == Roles.ROOT:
                 self.scene.nodecolor(self.id, 0, 0, 0)
                 self.tx_power_level = len(config.NODE_TX_RANGES) - 1
@@ -418,6 +455,11 @@ class SensorNode(wsn.Node):
         # if we just became cluster head, start routerable checks
         if new_role == Roles.CLUSTER_HEAD:
             self.set_timer('TIMER_ROUTERABLE_CHECK', config.ROUTERABLE_CHECK_INTERVAL)
+
+        # cluster heads send keepalives
+        self.kill_timer('TIMER_CH_KEEPALIVE')
+        if new_role == Roles.CLUSTER_HEAD:
+            self.set_timer('TIMER_CH_KEEPALIVE', config.CH_KEEPALIVE_INTERVAL)
 
         # start sensor timer for registered, cluster head, and router roles
         if new_role in (Roles.REGISTERED, Roles.CLUSTER_HEAD, Roles.ROUTER) and new_role != Roles.ROOT:
@@ -437,13 +479,9 @@ class SensorNode(wsn.Node):
             self.clear_tx_range()
             self.erase_parent()
 
-        # keep parent visuals in sync with role changes
-        # self.update_parent_visual()
-
-    # Runs to become unregistered
+    # runs to become unregistered
     def become_unregistered(self, *, preserve_neighbors=False):
         self.kill_timer('TIMER_PROBE')
-        old_parent = self.parent_address
         if self.role != Roles.UNDISCOVERED:
             self.kill_all_timers()
             if self.role != Roles.UNREGISTERED:
@@ -453,13 +491,11 @@ class SensorNode(wsn.Node):
         self.erase_parent()
 
         self.addr = None
-
         self.ch_addr = None
 
         self.parent_address = None
-        self.parent_gui = None  # parent global unique id
-
-        self.root_addr = None  # root address
+        self.parent_gui = None
+        self.root_addr = None
         self.parent_set_time = self.now
         self.downstream_ch_addr = None
         self.downstream_ch_gui = None
@@ -467,13 +503,14 @@ class SensorNode(wsn.Node):
         self.set_role(Roles.UNREGISTERED)
         self.c_probe = 0
         self.th_probe = len(config.NODE_TX_RANGES) * 6
-        self.hop_count = 99999
+        self.hops_to_root = 99999
         self.probes_sent = 0
         self.tx_power_level = 0
         self.tx_range = config.NODE_TX_RANGES[self.tx_power_level]
         self.pending_ch_promotion = None
         self.last_parent_check = 0
         self.last_join_target = None
+        self.last_join_target_uid = None
         self.last_join_time = 0
 
         if not preserve_neighbors:
@@ -481,263 +518,195 @@ class SensorNode(wsn.Node):
             self.child_networks_table = {}
             self.members_table = {}
 
-        self.received_JR_guis = [] # TODO see if we need to preserve this ???
+        self.received_JR_guis = []
 
+        # start probe and join timers
         self.send_probe()
-        next_try = config.TIMER_JOIN_REQ_INTERVAL + random.uniform(-1, 1)
-        self.set_timer('TIMER_JOIN_REQ', next_try)
-        # keep probing periodically until we find a parent
-        self.set_timer('TIMER_PROBE', 1)
 
-    # runs to snoop/update tables based on packet type
+        self.set_timer('TIMER_JOIN_REQ', random.uniform(0, config.TIMER_JOIN_REQ_INTERVAL))
+        self.set_timer('TIMER_PROBE', random.uniform(0, 1))
+
+    # runs to update tables based on packet type
     def update_routing_info(self, pck):
-        ptype = pck.get('type', None)  # packet type
-        uid = pck.get('uid', None)
-        child_addr = pck.get('child_addr', None)
-        src_addr: wsn.Addr = pck.get('src_addr', None) # who sent the packet
-        last_hop_addr = pck.get('last_router', None) # who we heard it from # TODO this might not be necessary
-        hop_count = pck.get('hop_count', None) # hops to target
-        arrival_time = pck.get('arrival_time', None)  # time we received the packet
-        dist = pck.get('distance', None)  # distance to last hop sender
-        role = pck.get('role', None) # sender role
-        capabilities = pck.get('capabilities', None)
-        path_cost = pck.get('path_cost', None)
+        neighbor_addr = pck.get('last_router')
+        if neighbor_addr is None: 
+            return
 
+        # get stats
+        arrival_time = pck.get('arrival_time', self.now)
+        dist = pck.get('distance', 0)
+
+
+        # update neighbor table
+        entry = self.neighbors_table.get(neighbor_addr)
+
+        if entry is None:
+            # create new entry
+            self.neighbors_table[neighbor_addr] = NeighborTableEntry(
+                uid=pck.get('uid'),
+                nextHopAddr=neighbor_addr,
+                hops=1,
+                capabilities=pck.get('capabilities'),
+                role=pck.get('role'),
+                lastHeard=arrival_time,
+                rx_cost=dist,
+                path_cost=pck.get('path_cost'),
+                join_rejected_until=0
+            )
+        else:
+            # update existing entry
+            entry.lastHeard = arrival_time
+            entry.rx_cost = dist
+            if pck.get('uid'): entry.uid = pck.get('uid')
+            if pck.get('role'): entry.role = pck.get('role')
+            if pck.get('path_cost'): entry.path_cost = pck.get('path_cost')
+        entry = self.neighbors_table.get(neighbor_addr)
+
+        # on heartbeat, update table
+        ptype = pck.get('type', None)
         if ptype == 'HEART_BEAT':
-            if hop_count is None or hop_count != 1:
-                self.log(f"heartbeat with hop_count={hop_count}, expected 1")
+            src_addr = pck.get('src_addr')
+            uid = pck.get('uid')
+            member_addr = pck.get('child_addr', src_addr)
 
-            # here we are updating info about the sender
-            entry: NeighborTableEntry | None = self.neighbors_table.get(src_addr)
-            if entry is None:
-                self.neighbors_table[src_addr] = NeighborTableEntry(
-                    uid=uid,
-                    nextHopAddr=src_addr,
-                    hops=hop_count,
-                    capabilities=capabilities,
-                    role=role,
-                    lastHeard=arrival_time, # time we last heard from this neighbor
-                    rx_cost=dist, # distance to next hop node
-                    path_cost=path_cost,
-                    join_rejected_until=0
-                )
-            else:
-                entry.uid = uid
-                entry.nextHopAddr = src_addr
-                entry.lastHeard = arrival_time
-                entry.hops = hop_count
-                entry.capabilities = capabilities
-                entry.role = role
-                entry.rx_cost = dist
-                entry.path_cost = path_cost
+            if entry is not None:
+                entry.hops = 1
+                entry.nextHopAddr = neighbor_addr
+            
+            # ensure we have a src 
+            if src_addr:
+                pass 
 
-            # update member info if we are cluster head or root and the sender is our member
-            if self.role in (Roles.CLUSTER_HEAD, Roles.ROOT) and self.ch_addr is not None \
-                    and child_addr is not None and child_addr.net_addr == self.ch_addr.net_addr:
-                member_entry: MemberTableEntry | None = self.members_table.get(child_addr, None)
-                if member_entry is not None:
-                    if member_entry.uid == uid:
-                        member_entry.expiry_time = self.now + config.MEMBER_STALE_INTERVAL
-                        member_entry.tx_power_level = self.get_tx_power_level_for_dist(dist)
-
+            # member renewal
+            if self.role in (Roles.CLUSTER_HEAD, Roles.ROOT) and self.ch_addr:
+                # check if the sender is a member of the subnet and update if so
+                if member_addr is not None and member_addr.net_addr == self.ch_addr.net_addr:
+                    member_entry = self.members_table.get(member_addr)
+                    if member_entry:
+                        if member_entry.uid == uid:
+                            member_entry.expiry_time = self.now + config.MEMBER_STALE_INTERVAL
+                        else:
+                            self.log(f"uid conflict: {member_addr} owned by {member_entry.uid}, claimed by {uid}, sending NACK")
+                            self.send_join_nack(uid)
+                    
+                    # unknown member
                     else:
-                        self.log(f"member uid changed for {child_addr} in CH {self.ch_addr}, was {member_entry.uid}, now {uid}"
-                                 f"expiring old entry")
-                        # uid changed, delete old entry
-                        self.members_table.pop(child_addr, None)
+                        is_known_uid = any(m.uid == uid for m in self.members_table.values() if m)
+                        
+                        if is_known_uid:
+                            self.log(f"uid {uid} moved to {member_addr} without re-join, ignoring")
+                        else:
+                            self.log(f"unknown member {uid} at {member_addr}, sending NACK")
+                            self.send_join_nack(uid)
 
-                else:
-                    self.log(f"heartbeat from non-member {child_addr} on CH {self.ch_addr} network")
-                    self.send_join_nack(uid)
+            # read advertised neighbors to build neighbor table
+            neighbor_list = pck.get('neighbors', [])
+            if neighbor_list:
+                adv_limit = max(1, config.NEIGHBOR_HOP_LIMIT)
+                for advert in neighbor_list:
+                    advert_addr = advert.get('addr')
+                    advert_hops = advert.get('hops')
+                    # skip invalid
+                    if advert_addr is None or advert_hops is None:
+                        continue
 
-            # update child network info if the src addr is from a 254 address and it came from one of our children
-            if self.role in (Roles.CLUSTER_HEAD, Roles.ROOT) and self.ch_addr is not None \
-                    and src_addr is not None and src_addr.net_addr != self.ch_addr.net_addr \
-                    and child_addr is not None and child_addr.net_addr == self.ch_addr.net_addr \
-                    and src_addr.node_addr == 254:
-                child_entry: ChildNetworkEntry | None = self.child_networks_table.get(src_addr.net_addr, None)
+                    # avoid adding ourselves
+                    if advert_addr in self.my_addresses:
+                        continue
+                    
+                    # only add within limit
+                    new_hops = advert_hops + 1
+                    if new_hops > adv_limit:
+                        continue
+                    
+                    # update or add entry if better
+                    existing_adv = self.neighbors_table.get(advert_addr)
+                    if existing_adv is None or new_hops < existing_adv.hops:
+                        self.neighbors_table[advert_addr] = NeighborTableEntry(
+                            uid=existing_adv.uid if existing_adv else None,
+                            nextHopAddr=neighbor_addr,
+                            hops=new_hops,
+                            capabilities=existing_adv.capabilities if existing_adv else None,
+                            role=existing_adv.role if existing_adv else None,
+                            lastHeard=arrival_time,
+                            rx_cost=existing_adv.rx_cost if existing_adv else dist,
+                            path_cost=existing_adv.path_cost if existing_adv else None,
+                            join_rejected_until=existing_adv.join_rejected_until if existing_adv else 0
+                        )
+                    # update entry if same hop count
+                    elif new_hops == existing_adv.hops:
+                        existing_adv.lastHeard = arrival_time
+                        if existing_adv.nextHopAddr != neighbor_addr:
+                            existing_adv.nextHopAddr = neighbor_addr
 
-                if child_entry is None:
-                    self.log(f'no child network entry for {src_addr.net_addr} from HEART_BEAT, should have been created on netid response')
-                    # TODO do something?
-                else:
-                    child_entry.next_hop_addr = child_addr
-                    child_entry.hops = hop_count
-                    child_entry.last_heard = self.now
+            # update hops_to_root if heartbeat is from our parent
+            if neighbor_addr == self.parent_address:
+                parent_hops = pck.get('hops_to_root', 99999)
+                if parent_hops < 99999:
+                    self.hops_to_root = parent_hops + 1
 
-                    # update requester uid if changed
-                    if child_entry.requester_uid != uid:
-                        self.log(f'child network {src_addr.net_addr} requester uid changed from {child_entry.requester_uid} to {uid}')
-                        child_entry.requester_uid = uid
-
-        elif ptype == 'NETID_REQ' and self.role is Roles.CLUSTER_HEAD:
-            # if we are a cluster head, track last hop so when the response comes back we know where to send it
-            target_uid = pck.get('target_uid', None)
-            if target_uid is not None and src_addr is not None:
-                self.log(f'Tracking NETID_REQ from target_uid {target_uid} via last hop {last_hop_addr}')
-                self.pending_netid_last_hops.update({target_uid: last_hop_addr})
-            else:
-                self.log(f'NETID_REQ missing target_uid, cannot track last hop')
-            pass
-
-        elif ptype == 'NETID_RESP' and self.role is Roles.CLUSTER_HEAD:
-            # snoop info from 'NETID_RESP' packet as a CH, root does its own handling when responding to the request
-            promoted_to_ch_bool = pck.get('promoted_ch', False)
-            target_uid = pck.get('target_uid', None)
-            ch_addr = pck.get('ch_addr', None)
-            new_child_net_addr = ch_addr.net_addr if ch_addr is not None else None
-            reverse_hop_count = pck.get('reverse_hop_count', None)
-            request_last_hop = self.pending_netid_last_hops.pop(target_uid, None)
-
-            # check reverse hop count
-            if reverse_hop_count is None:
-                self.log(f'NETID_RESP missing reverse_hop_count')
+        # cluster heads store pending netid requests
+        elif ptype == 'NETID_REQ':
+            if self.role != Roles.CLUSTER_HEAD:
                 return
-            pck['reverse_hop_count'] = max(0, reverse_hop_count - 1)
+            target_uid = pck.get('target_uid')
+            last_hop = pck.get('last_router')
+            
+            if target_uid is not None and last_hop is not None:
+                # store last hop for target uid
+                self.pending_netid_last_hops[target_uid] = last_hop
 
-            # if promoted to CH, add/update child network entry
-            if promoted_to_ch_bool is not None and promoted_to_ch_bool:
-                if new_child_net_addr is None:
-                    self.log(f'NETID_RESP missing ch_addr for promoted CH')
-                    return
+        # cluster heads write new child networks on netid response
+        elif ptype == 'NETID_RESP':
+            if self.role != Roles.CLUSTER_HEAD:
+                return
 
-                if request_last_hop is None:
-                    # TODO unsure what to do here, likely the NETID_REQ went a different route than the RESP
-                    self.log(f'NETID_RESP missing last hop for requester uid {target_uid}')
-                    return
+            # grab the previously saved next hop
+            promoted = pck.get('promoted_ch', False)
+            target_uid = pck.get('target_uid')
+            next_hop_to_child = self.pending_netid_last_hops.pop(target_uid, None)
+            
+            if promoted and target_uid and next_hop_to_child:
+                new_net_addr = pck.get('ch_addr').net_addr
+                hops_to_child = pck.get('reverse_hop_count', 0)
+                
+                # create/update child network entry
+                self.child_networks_table[new_net_addr] = ChildNetworkEntry(
+                    next_hop_addr=next_hop_to_child,
+                    hops=hops_to_child,
+                    net_state="VALID",
+                    last_heard=self.now,
+                    ack_seq_no=-1,
+                    requester_uid=target_uid
+                )
+                self.log(f"learned child network {new_net_addr} via {next_hop_to_child}")
 
-                entry: ChildNetworkEntry | None = self.child_networks_table.get(new_child_net_addr, None)
-                if entry is None:
-                    self.child_networks_table[new_child_net_addr] = ChildNetworkEntry(
-                        next_hop_addr=request_last_hop,
-                        hops=reverse_hop_count,
-                        net_state="VALID",
-                        last_heard=arrival_time,
-                        ack_seq_no=-1,  # no pending validation
-                        requester_uid=target_uid
-                    )
-                    self.log(f'{self.ch_addr} added child network entry for {new_child_net_addr} from NETID_RESP')
-                else:
-                    self.log(f'{self.ch_addr} CH updated child network entry for new network addr: {new_child_net_addr} from NETID_RESP')
-                    entry.next_hop_addr = request_last_hop
-                    entry.hops = reverse_hop_count
-                    entry.net_state = "VALID"
-                    entry.last_heard = arrival_time
-                    # update requester uid if changed
-                    if entry.requester_uid != target_uid:
-                        # TODO this probably shouldn't happen, log it
-                        self.log(f'child network {new_child_net_addr} requester uid changed from {entry.requester_uid} to {target_uid}')
-                        entry.requester_uid = target_uid
+        # cluster heads and root update child networks on keepalive
+        elif ptype == 'NETID_KEEPALIVE':
+            if self.role not in (Roles.CLUSTER_HEAD, Roles.ROOT):
+                return
+            
+            net_id = pck.get('net_id') or (pck.get('src_addr').net_addr if pck.get('src_addr') else None)
+            if net_id is None:
+                return
+            
+            # update child network entry fields
+            entry = self.child_networks_table.get(net_id)
+            if entry:
+                entry.last_heard = self.now
+                entry.net_state = "VALID"
+                last_hop = pck.get('last_router')
+                if last_hop and last_hop != entry.next_hop_addr:
+                    entry.next_hop_addr = last_hop
+                if pck.get('hop_count'):
+                    entry.hops = pck.get('hop_count')
 
-        # TODO update ROUTE_REQ and ROUTE_RESP handling
-        # elif ptype == 'ROUTE_REQ':
-        #     if last_hop_addr is None:
-        #         return
-        #
-        #     entry = self.neighbors_table.get(last_hop_addr)
-        #     if entry is None:
-        #         self.neighbors_table[last_hop_addr] = NeighborTableEntry(
-        #             uid=None, # we don't know uid of last hop
-        #             nextHopAddr=last_hop_addr,
-        #             hops=1,
-        #             capabilities=None,
-        #             role=pck.get('role', None),
-        #             lastHeard=self.now,
-        #             rx_cost=pck.get('distance', 999999),
-        #             path_cost=None,
-        #             join_rejected_until=0 # no need to preserve
-        #         )
-        #         self.log(f'Add neighbor entry for {last_hop_addr} from ROUTE_REQ')
-        #     else:
-        #         entry.lastHeard = self.now
-        #         # Update cost if this path is better
-        #         if pck.get('distance', 999999) < entry.rx_cost:
-        #             entry.rx_cost = pck.get('distance')
-        #         entry.upstream_addr = pck.get('upstream_addr', entry.upstream_addr)
-        #
-        # elif ptype == 'ROUTE_RESP':
-        #     target_addr = pck.get('target_addr')
-        #     last_hop_entry = self.neighbors_table.get(last_hop_addr)
-        #     target_entry = self.neighbors_table.get(target_addr)
-        #
-        #     # ensure we have an entry for the last hop neighbor
-        #     if last_hop_entry is None:
-        #         self.neighbors_table[last_hop_addr] = NeighborTableEntry(
-        #             uid=None, # we don't know uid of last hop
-        #             nextHopAddr=last_hop_addr,
-        #             hops=1,
-        #             capabilities=None,
-        #             role=pck.get('role', None),
-        #             lastHeard=self.now,
-        #             rx_cost=pck.get('distance', 999999),
-        #             join_rejected_until=0
-        #         )
-        #         self.log(f'add neighbor entry for {last_hop_addr} from ROUTE_RESP')
-        #     else:
-        #         last_hop_entry.lastHeard = self.now
-        #         last_hop_entry.rx_cost = pck.get('distance', last_hop_entry.rx_cost)
-        #         last_hop_entry.upstream_addr = pck.get('upstream_addr', last_hop_entry.upstream_addr)
-        #
-        #     if target_addr is None:
-        #         return
-        #
-        #     if target_entry is None:
-        #         # new entry
-        #         self.neighbors_table[target_addr] = NeighborTableEntry(
-        #             uid=pck.get('target_uid', -1),
-        #             nextHopAddr=last_hop_addr, # via this neighbor
-        #             hops=hop_count,
-        #             capabilities=pck.get('capabilities', None),
-        #             role=pck.get('role', None),
-        #             lastHeard=self.now,
-        #             rx_cost=pck.get('distance', 999999),
-        #             path_cost=pck.get('path_cost', None),
-        #             join_rejected_until=0 # no need to preserve
-        #         )
-        #         self.log(f'Add neighbor entry for {target_addr} via {last_hop_addr} from ROUTE_RESP')
-        #     else:
-        #         # check criteria to update route:
-        #         update_route = False
-        #         # if lower hop count,
-        #         if hop_count < target_entry.hops:
-        #             update_route = True
-        #         # if same hops and lower rx cost to next hop
-        #         if (hop_count == target_entry.hops) and (pck.get('distance', 999999) < target_entry.rx_cost):
-        #             update_route = True
-        #         # if the next/last hop changed and the route is stale
-        #         if target_entry.nextHopAddr != last_hop_addr:
-        #             if (self.now - target_entry.lastHeard) > config.HEARTH_BEAT_TIME_INTERVAL * 3:
-        #                 update_route = True
-        #         # also if capabilities or roles changed, update
-        #         if target_entry.capabilities != pck.get('capabilities', target_entry.capabilities):
-        #             update_route = True
-        #         if target_entry.knownRoles != pck.get('role_attributes', target_entry.knownRoles):
-        #             update_route = True
-        #         # if the target uid changed, update
-        #         if target_entry.uid != pck.get('target_uid', target_entry.uid):
-        #             update_route = True
-        #
-        #         # update if needed
-        #         if update_route:
-        #             target_entry.uid = pck.get('target_uid', target_entry.uid)
-        #             target_entry.nextHopAddr = last_hop_addr
-        #             target_entry.hops = hop_count
-        #             target_entry.rx_cost = pck.get('distance', target_entry.rx_cost)
-        #             target_entry.capabilities = pck.get('capabilities', target_entry.capabilities)
-        #             target_entry.knownRoles = pck.get('role_attributes', target_entry.knownRoles)
-        #             target_entry.lastHeard = self.now
-        #             target_entry.path_cost = pck.get('path_cost', target_entry.path_cost)
-        #             target_entry.upstream_addr = pck.get('upstream_addr', target_entry.upstream_addr)
-        #             self.log(f'Updated neighbor entry for {target_addr} via {last_hop_addr} from ROUTE_RESP')
-        #
-        #         # clear pending discovery for this node if we had one
-        #         self.pending_route_discovery.discard((target_addr.net_addr, target_addr.node_addr))
 
     # find best member to promote to cluster head
     def _find_ch_promotion_candidate(self):
         # if we are not a cluster head, we cannot promote anyone
         if self.role != Roles.CLUSTER_HEAD:
-            self.log("_find_ch_promotion_candidate called when not CLUSTER_HEAD")
+            # self.log('not a cluster head, cannot promote anyone')
             return None
 
         best_addr = None
@@ -748,8 +717,16 @@ class SensorNode(wsn.Node):
         for member_addr, member_entry in self.members_table.items():
             # find its neighbor entry
             n_entry = self.neighbors_table.get(member_addr, None)
+            if n_entry is None:
+                # self.log(f'no neighbor entry for member: {member_addr}')
+                continue
+                
+            # only consider members
+            if n_entry.role != Roles.REGISTERED:
+                # self.log(f'not a registered member: {member_addr}, role: {n_entry.role}')
+                continue
 
-            # for router push cost higher
+            # push score higher
             score = n_entry.rx_cost
             if score > best_score:
                 best_score = score
@@ -763,35 +740,38 @@ class SensorNode(wsn.Node):
         best_rx_strength_local = 999999
 
         for addr, entry in self.neighbors_table.items():
-            # pass over missing entries or non-1-hop neighbors
-            if entry is None or entry.hops != 1:
+            # pass over missing entries or non 1-hop
+            if entry is None:
                 continue
+
+            hops = entry.hops if entry.hops is not None else 1
+            if hops != 1:
+                continue
+            role = entry.role
+            caps = entry.capabilities
 
             # skip the ones that rejected us recently
             if entry.join_rejected_until and (self.now < entry.join_rejected_until):
                 continue
 
+            # skip cluster heads/root that cannot accept members
+            if role in (Roles.CLUSTER_HEAD, Roles.ROOT):
+                if caps is not None and getattr(caps, 'joinable', True) is False:
+                    continue
+
             # if we see root, prefer it immediately
-            if entry.role == Roles.ROOT:
+            if role == Roles.ROOT and hops == 1:
                 return addr, entry.rx_cost
 
             # only consider cluster heads if specified
             if require_cluster_head:
-                role = entry.role
                 if role is None or role != Roles.CLUSTER_HEAD:
                     continue
 
             # avoid routers unless explicitly allowed
             if not allow_router:
-                role = entry.role
                 if role is not None and role == Roles.ROUTER:
                     continue
-
-            # TODO this should not matter, since that node should become unregistered first annyways
-            # do not join a node that doesn't know how to reach the root
-            if entry.path_cost is None:
-                self.log(f'skipping join candidate {addr} with unknown path cost to root')
-                continue
 
             # prefer nearest candidate
             if entry.rx_cost < best_rx_strength_local:
@@ -814,33 +794,37 @@ class SensorNode(wsn.Node):
             self.log("mark_join_rejected called when not UNREGISTERED")
             return
 
-        # find neighbor entry and set backoff time
+        # find/create neighbor entry and set backoff time
         if neighbor_addr is not None:
             entry = self.neighbors_table.get(neighbor_addr, None)
             if entry is not None:
                 entry.join_rejected_until = self.now + config.JOIN_REJECT_BACKOFF
                 return
+            else:
+                self.neighbors_table[neighbor_addr] = NeighborTableEntry(
+                    uid=None,
+                    nextHopAddr=neighbor_addr,
+                    hops=1,
+                    capabilities=None,
+                    role=None,
+                    lastHeard=self.now,
+                    rx_cost=0,
+                    path_cost=None,
+                    join_rejected_until=self.now + config.JOIN_REJECT_BACKOFF
+                )
 
-        # do not backoff by uid, address should be sufficient
-        # if neighbor_uid is not None:
-        #     # optional: backoff by uid when address unknown
-        #     for addr, ent in self.neighbors_table.items():
-        #         if getattr(ent, "uid", None) == neighbor_uid:
-        #             ent.join_rejected_until = self.now + config.JOIN_REJECT_BACKOFF
-        #             break
-
-    # Runs on TIMER_JOIN_REQ fired, selects one of candidate parents and sends join request
+    # run on TIMER_JOIN_REQ fired selects one of candidate parents and sends join request
     def select_and_join(self):
         if self.role != Roles.UNREGISTERED:
-            self.log("select_and_join called when not UNREGISTERED")
             return
 
+        # make sure tables are up to date
         self.maintain_tables()
 
         # prefer cluster heads first
         best_addr, best_rx_strength = self.choose_join_candidate(require_cluster_head=True)
 
-        # if none, try any registered node
+        # if none, try any node except routers
         if best_addr is None:
             best_addr, best_rx_strength = self.choose_join_candidate(require_cluster_head=False, allow_router=False)
 
@@ -862,10 +846,9 @@ class SensorNode(wsn.Node):
     # runs after become_unregistered broadcast probe message
     def send_probe(self):
         if self.role not in (Roles.UNDISCOVERED, Roles.UNREGISTERED):
-            self.log("send_probe called when not UNDISCOVERED/UNREGISTERED")
             return
 
-        pck = self.build_common_packet(p_type='NULL', ack=False, dst_addr=wsn.BROADCAST_ADDR)
+        pck, _ = self.build_common_packet(p_type='PROBE', ack=False, dst_addr=wsn.BROADCAST_ADDR)
 
         if (self.probes_sent % 6) < 2:
             # first 2 probes look for cluster heads
@@ -882,19 +865,56 @@ class SensorNode(wsn.Node):
 
     # broadcast HEART_BEAT packet
     def send_heart_beat(self):
-        # ensure path cost is fresh before advertising
+        # ensure path cost is right
         self.compute_path_cost()
-        pck = self.build_common_packet(p_type='HEART_BEAT', ack=False, dst_addr=wsn.BROADCAST_ADDR,
+        pck, _ = self.build_common_packet(p_type='HEART_BEAT', ack=False, dst_addr=wsn.BROADCAST_ADDR,
                                        add_roles=True, add_capabilities=True)
 
         # include our child address if we have one
         if self.addr is not None:
             pck['child_addr'] = self.addr
 
-        # include our path cost to root
+        # include our path cost and hops to root
         pck['path_cost'] = self.path_cost
-        pck.update({'uid': self.id}) # do we need uid??
+        pck['hops_to_root'] = self.hops_to_root
+        pck.update({'uid': self.id})
+
+        # advertise neighbors up to N-1 hops
+        adv_limit = max(1, config.NEIGHBOR_HOP_LIMIT)
+        max_adv_hops = adv_limit - 1
+        if max_adv_hops > 0:
+            neighbor_adverts = []
+            for n_addr, n_entry in self.neighbors_table.items():
+                # skip invalid entries, invalid hop count, or too many hops
+                if n_addr is None or n_entry is None:
+                    continue
+                if n_entry.hops is None or n_entry.hops <= 0:
+                    continue
+                if n_entry.hops <= max_adv_hops:
+                    neighbor_adverts.append({
+                        'addr': n_addr,
+                        'hops': n_entry.hops
+                    })
+            if neighbor_adverts:
+                pck['neighbors'] = neighbor_adverts
         self.send(pck)
+
+    # CH keepalive to root so child network table entries are correct
+    def send_child_network_keepalive(self):
+        if self.role != Roles.CLUSTER_HEAD or self.ch_addr is None:
+            return
+
+        dst_addr = self.root_addr if self.root_addr is not None else wsn.Addr(1, 254)
+        pck, _ = self.build_common_packet(p_type='NETID_KEEPALIVE', ack=False, dst_addr=dst_addr)
+        pck.update({
+            'net_id': self.ch_addr.net_addr,
+            'requester_uid': self.id,
+        })
+
+        if self.addr is not None:
+            pck['child_addr'] = self.addr
+
+        self.route_and_forward_package(pck, use_mesh=False)
 
     # send JOIN_REQ packet to given dst
     def send_join_req(self, dest):
@@ -903,11 +923,16 @@ class SensorNode(wsn.Node):
             return
 
         # send a join request to given dst_addr
-        pck = self.build_common_packet(p_type='JOIN_REQ', ack=False, dst_addr=dest,
+        pck, _ = self.build_common_packet(p_type='JOIN_REQ', ack=False, dst_addr=dest,
                                        add_roles=True, add_capabilities=True)
         pck.update({'uid': self.id}) # add our uid so CH can identify us
+        pck.update({'next_hop_addr': dest})
         self.log(f'tx JOIN_REQ to {dest} from uid={self.id}')
         self.last_join_target = dest
+
+        # store uid to validate later
+        target_entry = self.neighbors_table.get(dest)
+        self.last_join_target_uid = target_entry.uid if target_entry else None
         self.last_join_time = self.now
         self.send(pck)
 
@@ -918,6 +943,9 @@ class SensorNode(wsn.Node):
             if n_entry is None:
                 self.neighbors_table.pop(n_addr, None)
                 continue
+            if n_entry.hops is not None and n_entry.hops > max(1, config.NEIGHBOR_HOP_LIMIT):
+                self.neighbors_table.pop(n_addr, None)
+                continue
             age = self.now - n_entry.lastHeard if n_entry.lastHeard is not None else None
             if age is not None and age > config.MEMBER_STALE_INTERVAL:
                 self.neighbors_table.pop(n_addr, None)
@@ -926,11 +954,34 @@ class SensorNode(wsn.Node):
         if self.role is not Roles.ROOT and self.role is not Roles.UNREGISTERED and \
                 self.parent_address is not None and self.parent_gui is not None:
             parent_entry: NeighborTableEntry | None = self.neighbors_table.get(self.parent_address, None)
-            # if parent was pruned, become unregistered
+            # if parent was lost, become unregistered
             if parent_entry is None:
                 self.log(f'parent {self.parent_address} missing, becoming UNREGISTERED')
                 self.become_unregistered()
                 return
+            
+            # skip parent role checks during promotion period
+            in_grace_period = False
+            if self.promotion_completed_at is not None:
+                if self.now - self.promotion_completed_at < 1.0:
+                    in_grace_period = True
+                else:
+                    self.promotion_completed_at = None  # grace period expired
+
+            # if parent role changed to something incompatible, detach to avoid stale links
+            if parent_entry.role is not None and not in_grace_period:
+                if self.role == Roles.REGISTERED and parent_entry.role not in (Roles.CLUSTER_HEAD, Roles.ROOT):
+                    self.log(f'parent role changed to {parent_entry.role}, becoming UNREGISTERED')
+                    self.become_unregistered()
+                    return
+                if self.role == Roles.CLUSTER_HEAD and parent_entry.role not in (Roles.ROUTER, Roles.ROOT, Roles.CLUSTER_HEAD):
+                    self.log(f'parent role changed to {parent_entry.role}, becoming UNREGISTERED')
+                    self.become_unregistered()
+                    return
+                if self.role == Roles.ROUTER and parent_entry.role not in (Roles.ROUTER, Roles.ROOT, Roles.CLUSTER_HEAD):
+                    self.log(f'parent role changed to {parent_entry.role}, becoming UNREGISTERED')
+                    self.become_unregistered()
+                    return
             # if parent uid is known, verify it matches
             if self.parent_gui is not None and parent_entry.uid is not None:
                 # if parent uid changed, become unregistered
@@ -941,17 +992,25 @@ class SensorNode(wsn.Node):
 
         # if there is a better neighbor than our parent, become unregistered
         if self.role == Roles.REGISTERED:
-            if self.parent_address is not None:
+            # skip update during rejoin
+            if self.last_registered_at is not None and (self.now - self.last_registered_at) < config.REJOIN_COOLDOWN:
+                pass
+            elif self.parent_address is not None:
                 parent_entry: NeighborTableEntry | None = self.neighbors_table.get(self.parent_address, None)
                 if parent_entry is not None and parent_entry.path_cost is not None:
-                    best_addr = self.choose_join_candidate(require_cluster_head=False, allow_router=False)
+                    best_addr, best_rx_cost = self.choose_join_candidate(require_cluster_head=True, allow_router=False)
                     if best_addr is not None:
                         if best_addr != self.parent_address:
                             best_entry: NeighborTableEntry | None = self.neighbors_table.get(best_addr, None)
                             if best_entry is not None:
-                                self.log(f'found better parent candidate {best_addr}')
-                                self.become_unregistered()
-                                return
+                                # only switch if improvement exceeds threshold
+                                current_rx_cost = parent_entry.rx_cost
+                                improvement = (current_rx_cost - best_rx_cost) / current_rx_cost
+                                if improvement > config.PARENT_SWITCH_HYSTERESIS:
+                                    self.log(f'better parent found {best_addr} '
+                                           f'(improvement: {improvement*100:.1f}%)')
+                                    self.become_unregistered()
+                                    return
 
 
         # if we are router and our downstream neighbor is missing, become unregistered
@@ -985,7 +1044,7 @@ class SensorNode(wsn.Node):
                 if member_entry is not None and self.now >= member_entry.expiry_time:
                     self.members_table.pop(member_addr, None)
                     continue
-                # remove members with different net_addr than our ch_addr (ie. if our ch_addr changed)
+                # remove members with different net_addr than our ch_addr
                 if self.ch_addr is not None and member_addr.net_addr != self.ch_addr.net_addr:
                     self.members_table.pop(member_addr, None)
                     continue
@@ -994,7 +1053,6 @@ class SensorNode(wsn.Node):
                     self.members_table.pop(member_addr, None)
                     continue
 
-            # TODO this may be too much, we need to inspect every packet to keep last_heard fresh
             # cleanup child networks table
             for net_id, entry in list(self.child_networks_table.items()):
                 if entry is None:
@@ -1004,6 +1062,11 @@ class SensorNode(wsn.Node):
                 # remove child networks if expired and still pending
                 age = self.now - entry.last_heard if entry.last_heard is not None else None
                 if age is not None and age > config.PARENT_STALE_INTERVAL and entry.net_state != "VALID":
+                    self.child_networks_table.pop(net_id, None)
+                    continue
+
+                # remove old child networks so addresses can be reused
+                if age is not None and age > config.NETID_STALE_INTERVAL:
                     self.child_networks_table.pop(net_id, None)
 
     # get next free node address
@@ -1026,12 +1089,21 @@ class SensorNode(wsn.Node):
             if member_addr is not None:
                 used_node_addrs.add(member_addr.node_addr)
 
+        # also exclude our own addr if it's a member address (not 254) in the same network
+        # this prevents conflict when CH was promoted from a member role within the same network
+        if self.addr is not None and self.addr.node_addr != 254 and self.addr.net_addr == self.ch_addr.net_addr:
+            used_node_addrs.add(self.addr.node_addr)
+
+        # if we've already allocated all slots, no new address is available
+        if len(used_node_addrs) >= config.SIM_MAX_CHILDREN:
+            return None
+
         # find next free node address:
-        for node_addr in range(1, config.SIM_MAX_CHILDREN): # 1..config.SIM_MAX_CHILDREN-1
+        for node_addr in range(1, config.SIM_MAX_CHILDREN + 1):  # 1..config.SIM_MAX_CHILDREN
             if node_addr not in used_node_addrs:
                 return node_addr
 
-        self.log(f'no free node addresses available in cluster head network {self.ch_addr}')
+        # self.log(f'no free node addresses available in cluster head network {self.ch_addr}')
         return None
 
     # get next free network address
@@ -1055,7 +1127,7 @@ class SensorNode(wsn.Node):
 
     # tell a node to leave by sending JOIN_NACK
     def send_join_nack(self, candidate_uid):
-        pck = self.build_common_packet(p_type='JOIN_ACK', ack=False, dst_addr=wsn.BROADCAST_ADDR)
+        pck, _ = self.build_common_packet(p_type='JOIN_ACK', ack=False, dst_addr=wsn.BROADCAST_ADDR)
         pck.update({
             'uid': self.id,
             'target_uid': candidate_uid,
@@ -1064,7 +1136,6 @@ class SensorNode(wsn.Node):
             'time_addr_valid': 0
         })
         self.send(pck)
-
 
     # send JOIN_ACK packet to requesting node, rcv_pck is the received JOIN_REQ packet
     def send_join_ack(self, rcv_pck):
@@ -1075,9 +1146,9 @@ class SensorNode(wsn.Node):
             self.log('join request denied (missing candidate uid)')
             return
 
-        # only cluster heads and root can grant joins
+        # only cluster heads and root can grant joins, otherwise deny
         if self.role not in (Roles.CLUSTER_HEAD, Roles.ROOT) or self.ch_addr is None:
-            pck = self.build_common_packet(p_type='JOIN_ACK', ack=False, dst_addr=wsn.BROADCAST_ADDR)
+            pck, _ = self.build_common_packet(p_type='JOIN_ACK', ack=False, dst_addr=wsn.BROADCAST_ADDR)
             pck.update({
                 'uid': self.id,
                 'target_uid': candidate_uid,
@@ -1089,7 +1160,7 @@ class SensorNode(wsn.Node):
             self.send(pck)
             return
 
-        pck = self.build_common_packet(p_type='JOIN_ACK', ack=True, dst_addr=wsn.BROADCAST_ADDR)
+        pck, _ = self.build_common_packet(p_type='JOIN_ACK', ack=True, dst_addr=wsn.BROADCAST_ADDR)
         pck.update({'target_uid': candidate_uid}) # target the requesting uid
         pck.update({'uid': self.id}) # add our uid
 
@@ -1114,12 +1185,11 @@ class SensorNode(wsn.Node):
         # check if we already have this member
         for member_addr, member_entry in self.members_table.items():
             if member_entry is not None and member_entry.uid == candidate_uid:
-                self.log(f'JOIN_ACK granted existing uid={candidate_uid}, addr={member_addr}')
+                self.log(f'JOIN_ACK tx (existing) to uid={candidate_uid}, addr={member_addr}')
                 seq_no = self.send(pck, tx_level=self.get_tx_power_level_for_dist(candidate_dist))
 
                 # update existing member entry
                 member_entry.expiry_time = self.now + config.MEMBER_STALE_INTERVAL
-                member_entry.tx_power_level = self.get_tx_power_level_for_dist(candidate_dist)
                 member_entry.renewal_valid = False
                 if seq_no is not None:
                     member_entry.ack_seq_no = seq_no
@@ -1130,8 +1200,7 @@ class SensorNode(wsn.Node):
         # otherwise, add new member entry
         member_entry = MemberTableEntry(
             uid=candidate_uid, renewal_valid=False, ack_seq_no=-1,
-            expiry_time=self.now + config.MEMBER_STALE_INTERVAL,
-            tx_power_level=self.get_tx_power_level_for_dist(candidate_dist)
+            expiry_time=self.now + config.MEMBER_STALE_INTERVAL
         )
         self.members_table[new_addr] = member_entry
 
@@ -1142,181 +1211,117 @@ class SensorNode(wsn.Node):
         else:
             member_entry.ack_seq_no = -1
 
-        self.log(f'JOIN_ACK granted uid={candidate_uid}, addr={new_addr}, seq={seq_no}')
+        self.log(f'JOIN_ACK tx to uid={candidate_uid}, addr={new_addr}, seq={seq_no}')
         return
 
     # send ACK packet to dest for given sequence number
     def send_ack(self, dest, seq_no, ack_type="NULL"):
-        pck = self.build_common_packet(p_type='ACK', ack=False, dst_addr=dest)
+        pck, _ = self.build_common_packet(p_type='ACK', ack=False, dst_addr=dest)
         pck.update({'ack_seq_no': seq_no})
         pck.update({'ack_type': ack_type})
         self.route_and_forward_package(pck)
 
-    # N-HOP routing
-    def send_route_request(self, target_addr):
-        self.broadcast_id += 1
-        pck = self.build_common_packet(p_type='ROUTE_REQ', ack=False, dst_addr=wsn.BROADCAST_ADDR)
-
-        pck.update({
-            'rreq_id': self.broadcast_id, # broadcast id
-            'target_addr': target_addr,  # target
-        })
-
-        # we have seen our own rreq
-        self.rreq_seen.add((self.addr, self.broadcast_id))
-
-        self.log(f'broadcasting ROUTE_REQ for {target_addr}')
-        self.send(pck)
-
-    # start route discovery process for target address
-    def start_route_discovery(self, target_addr):
-        # ensure we have a target and it's not broadcast
-        if target_addr is None or target_addr == wsn.BROADCAST_ADDR:
-            return
-        # ensure we are registered and have an address
-        if self.role is Roles.UNREGISTERED or self.role is Roles.UNDISCOVERED:
-            return
-        if self.addr is None or self.ch_addr is None:
-            return
-
-        # check if we already have a pending discovery for this target
-        key = (target_addr.net_addr, target_addr.node_addr)
-        if key in self.pending_route_discovery:
-            return
-        self.pending_route_discovery.add(key)
-        self.send_route_request(target_addr)
-
-    # send route reply from target to requester
-    def send_route_reply(self, requester_addr):
-        pck = self.build_common_packet(p_type='ROUTE_RESP', ack=False, dst_addr=requester_addr,
-                                       add_capabilities=True, add_roles=True)
-
-        pck.update({
-            'target_addr': self.addr, # send our address as target
-            'target_uid': self.id, # our uid
-        })
-
-        self.log(f'send ROUTE_RESP to {requester_addr} from target {self.addr}')
-        self.route_and_forward_package(pck)
-
     # route and forward given packet
-    def route_and_forward_package(self, pck, use_mesh=True, use_tree=True):
-        dst: wsn.Addr = pck.get('dst_addr')
-        dst_parent_addr: wsn.Addr = None
+    def route_and_forward_package(self, pck, use_mesh=True):
+        dst = pck.get('dst_addr')
         prev_hop = pck.get('last_router')
-        self_parent_entry = self.neighbors_table.get(self.parent_address) if self.parent_address is not None else None
 
-        # if broadcast, send directly
+        # if broadcast send directly
         if dst == wsn.BROADCAST_ADDR:
+            pck['next_hop_addr'] = wsn.BROADCAST_ADDR
             return self.send(pck)
 
-        # if the packet has an explicit next hop, use it and bypass routing
-        explicit_next_hop = pck.get('next_hop_addr')
-        if explicit_next_hop is not None:
-            if explicit_next_hop in (self.addr, self.ch_addr, self.root_addr):
-                pck['next_hop_addr'] = None
-            else:
-                # explicit next hop provided, use it
-                self.log(f'using explicit next hop {explicit_next_hop} for dst={dst}')
-                self.send(pck)
+        # if explicit next hop is given use that
+        explicit_next = pck.get('next_hop_addr')
+        if explicit_next is not None and explicit_next not in self.my_addresses:
+            self.log(f"forwarding via next hop: {explicit_next}")
+            return self.send(pck)
+    
+        pck['next_hop_addr'] = None
 
-        # calculate dst parent address
-        if dst.node_addr != 254:
-            dst_parent_addr = wsn.Addr(dst.net_addr, 254)
+        # drop if no dst
+        if dst is None:
+            self.log("no destination in packet, dropping")
+            return -1
 
-        #
-        # Mesh Rules:
-        #
-        if use_mesh and pck['type'] not in ('NETID_REQ', 'NETID_RESP', 'JOIN_REQ', 'JOIN_ACK', 'CH_PROMOTE'):
-            entry: NeighborTableEntry = self.neighbors_table.get(dst)
-            parent_entry: NeighborTableEntry = self.neighbors_table.get(dst_parent_addr)
+        if dst in self.my_addresses:
+            self.log("route_and_forward called for self-dst packet")
+            return 0
 
-            # if destination is in our neighbor table, send to destination
-            if entry is not None:
-                nh = entry.nextHopAddr
-                if nh is not None:
-                    pck['next_hop_addr'] = nh
-                    return self.send(pck)
+        target_net = getattr(dst, 'net_addr', None)
 
-            # if destination<-parent is in our neighbor table, send to parent
-            if parent_entry is not None:
-                nh = parent_entry.nextHopAddr
-                if nh is not None:
-                    pck['next_hop_addr'] = nh
-                    return self.send(pck)
+        # block certain packets for the mesh (mostly control stuff)
+        mesh_type = pck.get('type')
+        mesh_blocked_types = {
+            'NETID_REQ', 'NETID_RESP', 'NETID_KEEPALIVE',
+            'ACK', 'CH_PROMOTE', 'JOIN_ACK',
+        }
+        mesh_blocked = mesh_type in mesh_blocked_types
+        allow_mesh = use_mesh and (not config.TREE_ONLY) and pck.get('use_mesh', True) and not mesh_blocked
 
-        # no mesh route known so start discovery (but not for route discovery packets themselves)
-        # if pck.get('type') not in ('ROUTE_REQ', 'ROUTE_RESP'):
-        #     self.start_route_discovery(dst)
-
-        #
-        # Tree Rules
-        #
-        if use_tree:
-            if self.role == Roles.ROUTER:
-                upstream = self.parent_address
-                downstream = self.downstream_ch_addr
-
-                # if no link, send to upstream if we have it
-                if downstream is None:
-                    self.log(f'error ROUTER no downstream, sending to upstream {upstream} for dst={dst}')
-                    if upstream is not None and prev_hop != upstream:
-                        pck['next_hop_addr'] = upstream
-                        return self.send(pck)
-                    return -1
-
-                # if from parent, send to downstream
-                if prev_hop == upstream:
-                    # self.log(f'ROUTER sending to downstream {downstream} for dst={dst}')
-                    pck['next_hop_addr'] = downstream
-                    return self.send(pck)
-
-                # otherwise send to upstream
-                else:
-                    # self.log(f'ROUTER sending to upstream {upstream} for dst={dst}')
-                    pck['next_hop_addr'] = upstream
-                    return self.send(pck)
-
-            # if we are a cluster head/root:
-            if self.role in (Roles.CLUSTER_HEAD, Roles.ROOT):
-                # if destination is part of our network, send to child
-                if self.ch_addr is not None and dst.net_addr == self.ch_addr.net_addr:
-                    pck['next_hop_addr'] = dst
-                    return self.send(pck)
-                # if the destination network id is in one of our child networks, send to that next hop
-                elif self.child_networks_table:
-                    child_net_entry: ChildNetworkEntry = self.child_networks_table.get(dst.net_addr)
-                    if child_net_entry is not None:
-                        pck['next_hop_addr'] = child_net_entry.next_hop_addr
-                        return self.send(pck)
-
-            # otherwise if we are not root, send up the tree to our parent
-            if self.role != Roles.ROOT and self.parent_address is not None:
-                nh = self.parent_address
-                if self_parent_entry is not None and self_parent_entry.nextHopAddr is not None:
-                    nh = self_parent_entry.nextHopAddr
-                if nh == prev_hop:
-                    self.log(f'[LOOP] tree parent nh={nh} equals prev_hop for dst={dst} at node {self.id}')
-                    return -1
-                pck['next_hop_addr'] = nh
+        # mesh: use neighbor table
+        if allow_mesh:
+            route = self.neighbors_table.get(dst)
+            # if we know the dst, send to next hop
+            if route and route.nextHopAddr:
+                pck['next_hop_addr'] = route.nextHopAddr
                 return self.send(pck)
 
-        # if we are root and we reach here, theoretically should not happen
-        parent_entry = self.neighbors_table.get(self.parent_address)
-        self.log(
-            f'no route to destination {dst} from node {self.id} '
-            f'role={self.role.name} parent={self.parent_address} prev_hop={prev_hop} '
-            f'neighbors={list(self.neighbors_table.keys())}'
-        )
-        if parent_entry is not None:
-            self.log(
-                f'parent_entry: nextHop={parent_entry.nextHopAddr} hops={parent_entry.hops} '
-                f'lastHeard={parent_entry.lastHeard} rx_cost={parent_entry.rx_cost}'
-            )
-        if self.child_networks_table:
-            self.log(f'child_networks={ {k: v.next_hop_addr for k, v in self.child_networks_table.items()} }')
-        if self.members_table:
-            self.log(f'members={list(self.members_table.keys())}')
+            # if we know the dst CH, send to next hop
+            if target_net is not None:
+                dst_ch_addr = wsn.Addr(target_net, 254)
+                ch_route = self.neighbors_table.get(dst_ch_addr)
+                if ch_route and ch_route.nextHopAddr:
+                    pck['next_hop_addr'] = ch_route.nextHopAddr
+                    return self.send(pck)
+
+        # router logic
+        if self.role == Roles.ROUTER:
+            if self.downstream_ch_addr is None:
+                self.log(f"router {self.addr} has no downstream_ch_addr for dst={dst}")
+            else:
+                downstream_net = self.downstream_ch_addr.net_addr
+
+                # packets for the downstream network go to the downstream CH
+                if target_net == downstream_net:
+                    pck['next_hop_addr'] = self.downstream_ch_addr
+                    return self.send(pck)
+
+                # packets from parent go to downstream CH
+                if prev_hop == self.parent_address:
+                    pck['next_hop_addr'] = self.downstream_ch_addr
+                    return self.send(pck)
+
+        # cluster head logic
+        if self.role in (Roles.CLUSTER_HEAD, Roles.ROOT):
+            my_net_id = None
+            if self.ch_addr is not None:
+                my_net_id = self.ch_addr.net_addr
+            elif self.addr is not None:
+                my_net_id = self.addr.net_addr
+            
+            # if in my network, send directly
+            if target_net is not None and my_net_id is not None and target_net == my_net_id:
+                pck['next_hop_addr'] = dst
+                return self.send(pck)
+
+            # if in a child network, send to next hop to child network 
+            if target_net is not None and self.child_networks_table:
+                child_net_entry = self.child_networks_table.get(target_net)
+                if child_net_entry is not None and child_net_entry.next_hop_addr is not None:
+                    pck['next_hop_addr'] = child_net_entry.next_hop_addr
+                    return self.send(pck)
+
+        # otherwise, up the tree!!!
+        if self.role != Roles.ROOT and self.parent_address is not None:
+            if self.parent_address == prev_hop:
+                self.log(f"loop detected, parent {self.parent_address} sent non-routable {pck}")
+                return -1
+
+            pck['next_hop_addr'] = self.parent_address
+            return self.send(pck)
+
+        self.log(f"no route to address {dst}, i am {self.role.name}")
         return -1
 
     # send NETID_REQ packet to root
@@ -1325,7 +1330,7 @@ class SensorNode(wsn.Node):
             self.log("send_network_req called when CLUSTER_HEAD or ROOT")
             return
 
-        pck = self.build_common_packet(p_type='NETID_REQ', ack=False, dst_addr=wsn.Addr(1, 254))
+        pck, _ = self.build_common_packet(p_type='NETID_REQ', ack=False, dst_addr=wsn.Addr(1, 254))
         pck.update({'target_uid': self.id})
         self.log(f'NETID_REQ tx uid={self.id} src_addr={self.addr} dst={pck["dst_addr"]}')
         self.route_and_forward_package(pck)
@@ -1342,7 +1347,7 @@ class SensorNode(wsn.Node):
             self.log("send_network_resp called when not ROOT")
             return
 
-        pck = self.build_common_packet(
+        pck, _ = self.build_common_packet(
             p_type='NETID_RESP',
             ack=True,
             dst_addr=cm_dest
@@ -1358,7 +1363,7 @@ class SensorNode(wsn.Node):
             if entry.requester_uid == cm_uid:  # duplicate request
                 existing_net_id = net_id
                 existing_entry = entry
-                self.log(f'found existing network id {existing_net_id} for uid={cm_uid}, reusing it')
+                self.log(f'found existing network id {existing_net_id} for uid={cm_uid}, reusing existing entry')
                 break
 
         # get next free / existing network address
@@ -1392,9 +1397,9 @@ class SensorNode(wsn.Node):
             # only create a new entry if this is a brand-new network id
             if existing_net_id is None:
                 new_entry = ChildNetworkEntry(
-                    next_hop_addr=last_router,  # route downstream via last router
+                    next_hop_addr=last_router,  # the next hop is the last router
                     hops=req_hops if req_hops is not None else 0,
-                    net_state="PENDING",
+                    net_state="VALID",
                     last_heard=self.now,
                     ack_seq_no=-1,  # will be filled after send
                     requester_uid=cm_uid,
@@ -1415,22 +1420,21 @@ class SensorNode(wsn.Node):
             self.log('NETID_REQ missing hop_count')
 
         pck.update({'use_mesh': False})
-        pck.update({'use_tree': True})
-
-        seq_no = self.route_and_forward_package(pck, use_mesh=False, use_tree=True)
+        seq_no = self.route_and_forward_package(pck, use_mesh=False)
 
         # if success, record the seq_no for ACK to table
-        if next_free_net_addr is not None and next_free_net_addr in self.child_networks_table and seq_no is not None:
+        if pck.get('promoted_ch') and next_free_net_addr is not None and next_free_net_addr in self.child_networks_table and seq_no is not None:
             self.child_networks_table[next_free_net_addr].ack_seq_no = seq_no
 
+        granted = bool(pck.get('promoted_ch'))
         self.log(
-            f'NETID_RESP {"granted" if next_free_net_addr else "denied"} uid={cm_uid},'
+            f'NETID_RESP {"granted" if granted else "denied"} uid={cm_uid},'
             f' net={next_free_net_addr}, ch_addr={pck.get("ch_addr")}, seq={seq_no},'
             f' dst={cm_dest}, last_router={req_pck.get("last_router")}'
         )
         return
 
-    # handle CH_PROMOTE packet received
+    # handle CH_PROMOTE packet received (transfer role from registered to src's cluster head)
     def handle_ch_promote_request(self, pck):
         # must have a member address to be promoted
         target_addr = pck.get('dst_addr', None)
@@ -1465,10 +1469,8 @@ class SensorNode(wsn.Node):
                 self.log('CH_PROMOTE request denied (child is router)')
                 return
 
-        # clear address, take new cluster head address, become cluster head
-        # parent address becomes new_parent_addr
+        # write new CH address
         old_addr = self.addr
-        self.addr = None
         self.ch_addr = ch_addr
         self.parent_address = new_parent_addr
         self.parent_gui = parent_uid
@@ -1481,12 +1483,14 @@ class SensorNode(wsn.Node):
 
         self.draw_parent()
         self.set_role(Roles.CLUSTER_HEAD)
+        self.promotion_completed_at = self.now  # track promotion time
+
         self.send_heart_beat()
         self.kill_timer('TIMER_HEART_BEAT')
         self.set_timer('TIMER_HEART_BEAT', config.HEARTH_BEAT_TIME_INTERVAL)
 
-        # send back direct ACK to promoter
-        ack = self.build_common_packet(p_type='ACK', ack=False, dst_addr=self.parent_address)
+        # send back ACK to parent
+        ack, _ = self.build_common_packet(p_type='ACK', ack=False, dst_addr=self.parent_address)
         ack.update({'src_addr': old_addr})
         ack.update({'uid': self.id})
         ack.update({'next_hop_addr': self.parent_address})
@@ -1527,12 +1531,13 @@ class SensorNode(wsn.Node):
             self.addr = None
             self.become_unregistered(preserve_neighbors=True)
 
-    # find suitable candidate for cluster head promotion and run it
+    # find suitable candidate for cluster head promotion and try it
     def attempt_member_promotion(self, post_role='router'):
         # only cluster heads can promote members
         if self.role != Roles.CLUSTER_HEAD or self.ch_addr is None:
-            self.log('not a CH cannot promote member')
+            # self.log('attempt_member_promotion ignored (not cluster head)')
             return
+
         # make sure no promotion is in progress
         if self.pending_ch_promotion:
             # check if it has timed out
@@ -1543,30 +1548,36 @@ class SensorNode(wsn.Node):
             else:
                 self.log('ch promotion already pending')
             return
+
         # cannot promote if parent is a router
         if self.get_neighbor_role(self.parent_address) == Roles.ROUTER:
-            # self.log('parent is router, we cannot promote to ROUTER')
+            # self.log('attempt_member_promotion ignored (parent is router)')
             return
 
-        # cannot promote if any of our members are routers
-        for member_addr in self.members_table.keys():
-            role = self.get_neighbor_role(member_addr)
-            if role == Roles.ROUTER:
-                self.log('child is router, cannot promote member')
-                return
+        # only promote when exactly one active member exists
+        active_members = [
+            addr for addr, entry in self.members_table.items()
+            if entry is not None and entry.expiry_time >= self.now
+        ]
+        if len(active_members) != 1:
+            # self.log(f'attempt_member_promotion ignored (active members: {active_members})')
+            return
 
         # find suitable candidate
         candidate_addr = self._find_ch_promotion_candidate()
         if candidate_addr is None:
-            self.log('no suitable candidate found for CH promotion')
+            # self.log('no suitable candidate found for CH promotion')
             return
+
         self.log(f'promoting member at address {candidate_addr} to cluster head')
 
         # send CH_PROMOTE packet
-        pck = self.build_common_packet(p_type='CH_PROMOTE', ack=True, dst_addr=candidate_addr)
+        pck, _ = self.build_common_packet(p_type='CH_PROMOTE', ack=True, dst_addr=candidate_addr)
         pck.update({'uid': self.id})
+        pck.update({'next_hop_addr': candidate_addr})
         pck.update({'new_parent': self.addr}) # give our child address as new parent for promoted node
         pck.update({'ch_addr': self.ch_addr}) # the new cluster head address
+        pck.update({'members_table': dict(self.members_table)}) # transfer members to new CH (copy)
         self.log(f'CH_PROMOTE tx uid={self.id} src_addr={self.addr} dst={pck["dst_addr"]}')
         seq_no = self.send(pck)
 
@@ -1587,45 +1598,54 @@ class SensorNode(wsn.Node):
             return
 
         # update battery on rx
-        self.battery_mj -= (_estimate_packet_size_bytes(pck) * config.RX_ENERGY_PER_BYTE_UJ) / 1000.0
-        if self.battery_mj <= config.MIN_BATTERY_MJ:
-            self.is_alive = False
+        if self.role is not Roles.ROOT:
+            self.battery_mj -= (_estimate_packet_size_bytes(pck) * config.RX_ENERGY_PER_BYTE_UJ) / 1000.0
+        if self.battery_mj <= 0.0:
+            self._handle_battery_death(reason=f"while receiving {pck.get('type')}")
             return
 
-        pck = pck.copy()  # shallow copy
+        pck = copy.deepcopy(pck)  # deep copy to avoid shared path lists across receivers
         pck['arrival_time'] = self.now  # add arrival time to the received packet
 
-        # compute Euclidean distance between self and neighbor, used as rx_cost
+        # compute distance between self and neighbor, used as rx_cost
         sender_uid = pck.get('last_tx_uid', pck.get('uid'))
         if sender_uid in NODE_POS and self.id in NODE_POS:
             x1, y1 = NODE_POS[self.id]
             x2, y2 = NODE_POS[sender_uid]
             pck['distance'] = math.hypot(x1 - x2, y1 - y2)
 
-        # check if we even need to process this packet
+        # check if we should drop the packet
         if self._should_drop_packet(pck):
             self.log(f'dropping packet {pck}')
             return
 
-        # trace path if we didn't drop it
-        if config.TRACE_PATHS:
-            pck.get('path', []).append(self.id)
+        # check duplicate
+        if self._is_duplicate_packet(pck):
+            return
+        self._mark_packet_forwarded(pck)
 
         # snoop for NETID_REQ/RESP to update routing info
-        if self.role in (Roles.CLUSTER_HEAD, Roles.ROOT, Roles.ROUTER) and pck.get('type') in ('NETID_REQ', 'NETID_RESP', 'ROUTE_REQ', 'ROUTE_RESP'):
+        if self.role in (Roles.CLUSTER_HEAD, Roles.ROOT, Roles.ROUTER) and pck.get('type') in ('NETID_REQ', 'NETID_RESP', 'NETID_KEEPALIVE'):
             self.update_routing_info(pck)
 
         # if packet is not for us, route and forward
-        if not self._is_packet_at_destination(pck):
+        if not self._is_packet_at_destination(pck, log=False):
             if pck['type'] != 'DATA' and pck['type'] != 'SENSOR':
                 # self.log(f"forwarding network packet {pck}")
                 None
             self.route_and_forward_package(pck)
             return
 
+        # add path if we didn't drop or forward
+        pck.get('path', []).append(self.id)
+        if self.role in (Roles.CLUSTER_HEAD, Roles.ROOT):
+            pck.get('path_dynamic', []).append(self.ch_addr)
+        else:
+            pck.get('path_dynamic', []).append(self.addr)
+
         logged_delivery = False
 
-        # helper to log delivery if at final dest
+        # log delivery func (ignore some packets)
         def log_delivery():
             nonlocal logged_delivery
             if self._is_packet_at_destination(pck) and not logged_delivery and pck['type'] != 'HEART_BEAT' \
@@ -1633,51 +1653,7 @@ class SensorNode(wsn.Node):
                 self.record_packet_delivery(pck, trace_decision=True)
                 logged_delivery = True
 
-
-        # aodv type flood request handler
-        # if pck['type'] == 'ROUTE_REQ':
-        #     rreq_id = pck['rreq_id'] # unique id for this rreq
-        #
-        #     # drop duplicates
-        #     if (pck['src_addr'], rreq_id) in self.rreq_seen:
-        #         return
-        #
-        #     self.rreq_seen.add((pck['src_addr'], rreq_id)) # (src_addr, rreq_id) seen
-        #     # learn route back to requester (src_addr), not target
-        #     learn_pck = pck.copy()
-        #     learn_pck['target_addr'] = pck['src_addr']
-        #     self.update_routing_info(learn_pck)
-        #
-        #     # if we are the target, send reply
-        #     if self.addr is not None and pck.get('target_addr') is not None and pck.get('target_addr') == self.addr:
-        #         self.send_route_reply(requester_addr=pck['src_addr'], target_addr=self.addr, hops_from_us=0)
-        #     else:
-        #         # otherwise, if hop count exceeded, or we have no address, drop request
-        #         if pck['hop_count'] >= 2 or self.addr is None:
-        #             return
-        #
-        #         # TODO here we should check if we have a route to target and reply if so
-        #         # else, broadcast request with incremented hop count
-        #         forward_pck = pck.copy()
-        #         forward_pck['hop_count'] += 1
-        #         forward_pck['last_router'] = self.addr
-        #         # do NOT change src_addr
-        #         self.send(forward_pck)
-        #     return
-        #
-        # if pck['type'] == 'ROUTE_RESP':
-        #     # learn route to target
-        #     self.update_routing_info(pck.copy())
-        #
-        #     # if we are the destination, route complete
-        #     if self.addr is not None and pck.get('dst_addr') == self.addr:
-        #         self.log(f"Route found to {pck['src_addr']}.")
-        #     else:
-        #         self.route_and_forward_package(pck)
-        #     return
-
-
-        # Root or cluster head cases
+        # root or cluster head cases
         if self.role in (Roles.ROOT, Roles.CLUSTER_HEAD):
             if pck['type'] == 'HEART_BEAT':
                 self.update_routing_info(pck) # updates neighbor table with received heart beat message
@@ -1705,9 +1681,31 @@ class SensorNode(wsn.Node):
                     self.log(f'JOIN_ACK ACK received for uid={member.uid}, addr={pck["src_addr"]}, seq={pck["ack_seq_no"]}')
                     member.renewal_valid = True
                     member.expiry_time = self.now + config.MEMBER_STALE_INTERVAL
+                    # mark neighbor as registered once join completes so promotion can see it
+                    n_entry = self.neighbors_table.get(pck['src_addr'])
+                    if n_entry is None:
+                        self.neighbors_table[pck['src_addr']] = NeighborTableEntry(
+                            uid=member.uid,
+                            nextHopAddr=pck['src_addr'],
+                            hops=1,
+                            capabilities=None,
+                            role=Roles.REGISTERED,
+                            lastHeard=self.now,
+                            rx_cost=pck.get('distance', 0),
+                            path_cost=None,
+                            join_rejected_until=0
+                        )
+                    else:
+                        n_entry.role = Roles.REGISTERED
+                        n_entry.uid = member.uid
+                        n_entry.hops = 1
+                        n_entry.lastHeard = self.now
+                        if pck.get('distance') is not None:
+                            n_entry.rx_cost = pck['distance']
 
-                    # make routers as we go
-                    if self.role == Roles.CLUSTER_HEAD:
+                    # try to make routers as we go
+                    if self.role == Roles.CLUSTER_HEAD and config.ENABLE_ROUTERS:
+                        self.log(f'attempting router promotion from JOIN_ACK ACK for uid={member.uid}, addr={pck["src_addr"]}')
                         self.attempt_member_promotion(post_role='router')
 
                     log_delivery()
@@ -1719,6 +1717,10 @@ class SensorNode(wsn.Node):
                         self.log(f'NETID_RESP ACK received for net={net_id}, seq={pck["ack_seq_no"]}')
                         entry.net_state = "VALID" # net valid
                         entry.last_heard = self.now
+                        # update next_hop_addr from the last router in the ACK
+                        ack_last_router = pck.get('last_router')
+                        if ack_last_router is not None and ack_last_router != entry.next_hop_addr:
+                            entry.next_hop_addr = ack_last_router
                         log_delivery()
                         return
                 log_delivery()
@@ -1736,31 +1738,54 @@ class SensorNode(wsn.Node):
                 if self.role == Roles.ROOT:
                     # self.log(f'DATA rx from uid={pck.get("uid")}, src_addr={pck.get("src_addr")}, sensor_value={pck.get("sensor_value")}')
                     None
+                DATA_PACKETS_DELIVERED[0] += 1
+                log_delivery()
+                return
+
+            elif pck['type'] == 'JOIN_ACK':
+                # handle JOIN_ACK for CH new parent
+                if pck['target_uid'] == self.id:
+                    if pck.get('promoted_reg', False) and pck.get('cm_addr') is not None:
+                        self.addr = pck['cm_addr']
+                        self.parent_address = pck['src_addr']
+                        self.parent_gui = pck.get('uid')
+                        self.parent_set_time = self.now
+                        self.draw_parent()
+                        self.send_ack(pck['src_addr'], pck['seq_no'])
+                        self.log(f'JOIN_ACK accepted (CH re-parent): addr={self.addr} parent={self.parent_address}')
                 log_delivery()
                 return
 
         # router cases
         elif self.role == Roles.ROUTER:
             if pck['type'] == 'HEART_BEAT':
-                self.update_routing_info(pck) # updates neighbor table with received heart beat message
+                self.update_routing_info(pck) # update neighbor table on received HB
                 log_delivery()
                 return
             elif pck['type'] == 'PROBE_ROUTER':
-                self.send_heart_beat()  # advertise router presence for bridging
+                self.send_heart_beat()  # advertise router on probe
                 log_delivery()
                 return
             elif pck['type'] == 'JOIN_REQ':
+                # only accept JOIN_REQ if we appear to be the only option (no other CH/ROOT neighbors)
+                other_heads = [
+                    addr for addr, entry in self.neighbors_table.items()
+                    if entry is not None
+                    and addr != self.parent_address
+                    and entry.hops == 1
+                    and entry.role in (Roles.CLUSTER_HEAD, Roles.ROOT)
+                ]
+                # if other_heads:
+                #     self.log(f'JOIN_REQ ignored at router; nearby CH/ROOT neighbors present: {other_heads}')
+                #     log_delivery()
+                #     return
+
                 if pck.get('uid') is not None and pck['uid'] not in self.received_JR_guis:
                     self.received_JR_guis.append(pck['uid'])
                 self.send_network_req() # if we get a join request as a CM, send network request to root
                 log_delivery()
                 return
             elif pck['type'] == 'NETID_RESP':
-                # handle router to CH
-                # learn_pck = pck.copy()
-                # if learn_pck.get('dst_addr') is not None:
-                #     learn_pck['src_addr'] = learn_pck['dst_addr']
-                #     self.update_routing_info(learn_pck)
                 if pck['target_uid'] == self.id:
                     # check if we were actually promoted
                     if not pck['promoted_ch'] or pck['ch_addr'] is None:
@@ -1775,7 +1800,20 @@ class SensorNode(wsn.Node):
                     self.log(f'NETID_RESP reached target; promoting ROUTER to CH {pck["ch_addr"]}')
                     self.ch_addr = pck['ch_addr'] # new cluster head address
                     self.set_role(Roles.CLUSTER_HEAD) # become cluster head
-                    self.send_heart_beat() # send heart beat as new cluster head
+                    self.promotion_completed_at = self.now  # track promotion time
+                    self.send_heart_beat() # send hb as new CH
+
+                    # register downstream CH as a member and send JOIN_ACK
+                    if self.downstream_ch_addr is not None and self.downstream_ch_gui is not None:
+                        downstream_addr = wsn.Addr(self.ch_addr.net_addr, 254)
+                        member_entry = MemberTableEntry(
+                            uid=self.downstream_ch_gui,
+                            renewal_valid=True,
+                            ack_seq_no=-1,
+                            expiry_time=self.now + config.MEMBER_STALE_INTERVAL
+                        )
+                        self.members_table[downstream_addr] = member_entry
+                        self.send_join_ack({'uid': self.downstream_ch_gui, 'distance': 0})
 
                     # send join acks to the pending join requests
                     for gui in self.received_JR_guis:
@@ -1821,6 +1859,7 @@ class SensorNode(wsn.Node):
                     self.log(f'NETID_RESP reached target; promoting to CH {pck["ch_addr"]}')
                     self.ch_addr = pck['ch_addr'] # new cluster head address
                     self.set_role(Roles.CLUSTER_HEAD) # become cluster head
+                    self.promotion_completed_at = self.now  # track promotion time (prevents cascading failures)
                     self.send_heart_beat() # send heart beat as new cluster head
 
                     # send join acks to the pending join requests
@@ -1841,8 +1880,13 @@ class SensorNode(wsn.Node):
                 return
 
             elif pck['type'] == 'JOIN_ACK':
-                # if we get a join ack as a regular member, and it is for us, check if it wants to become unregistered
+                # if we get a join ack as a regular member and it is for us become become unregistered
                 if pck['target_uid'] == self.id and not pck.get('promoted_reg', True):
+                    # only honor demotion from our current parent
+                    if self.parent_address is not None and pck.get('src_addr') != self.parent_address:
+                        self.log(f'JOIN_ACK demotion ignored from non-parent {pck.get("src_addr")} (parent {self.parent_address})')
+                        log_delivery()
+                        return
                     self.log('RN becoming unregistered due to demoted JOIN_ACK')
                     self.become_unregistered(preserve_neighbors=False)
                     log_delivery()
@@ -1851,7 +1895,7 @@ class SensorNode(wsn.Node):
 
         # undiscovered node case
         elif self.role == Roles.UNDISCOVERED:
-            if pck['type'] == 'HEART_BEAT':  # it kills probe timer, becomes unregistered and sets join request timer once received heart beat
+            if pck['type'] == 'HEART_BEAT':  # kills probe timer, becomes unregistered and sets join request timer on received heart beat
                 self.update_routing_info(pck)
                 self.kill_timer('TIMER_PROBE')
                 self.become_unregistered(preserve_neighbors=True)
@@ -1861,18 +1905,34 @@ class SensorNode(wsn.Node):
         # Unregistered node case
         elif self.role == Roles.UNREGISTERED:
             if pck['type'] == 'HEART_BEAT':
-                self.update_routing_info(pck) # if received heart beat, update neighbor table
+                self.update_routing_info(pck) # update neighbor table on received heart beat
                 log_delivery()
                 return
 
             if pck['type'] == 'JOIN_ACK':
+                self.log(f'JOIN_ACK rx from {pck.get("src_addr")}, target_uid={pck.get("target_uid")}, assigned addr={pck.get("cm_addr")}')
                 if pck['target_uid'] == self.id:
+                    # validate address and uid matches what we expect
+                    src_addr = pck.get('src_addr')
+                    src_uid = pck.get('uid')
+                    valid_by_addr = src_addr in (self.last_join_target, self.parent_address)
+                    valid_by_uid = self.last_join_target_uid is not None and src_uid == self.last_join_target_uid
+
+                    if self.last_join_target is not None and not valid_by_addr and not valid_by_uid:
+                        self.log(f'JOIN_ACK ignored from non-target parent {src_addr} uid={src_uid} (expected addr={self.last_join_target}, uid={self.last_join_target_uid})')
+                        log_delivery()
+                        return
+
                     # did we get accepted?
                     if not pck['promoted_reg'] or pck['cm_addr'] is None:
-                        self.log(f'JOIN_ACK received but not accepted (promoted_reg={pck.get("promoted_reg")}, cm_addr={pck.get("cm_addr")})')
-                        self.mark_join_rejected(pck.get('src_addr'))
-                        self.last_join_target = None
-                        self.last_join_time = 0
+                        if self.last_join_target is None or pck.get('src_addr') == self.last_join_target:
+                            self.log(f'JOIN_ACK received but not accepted (promoted_reg={pck.get("promoted_reg")}, cm_addr={pck.get("cm_addr")})')
+                            self.mark_join_rejected(pck.get('src_addr'))
+                            self.last_join_target = None
+                            self.last_join_target_uid = None
+                            self.last_join_time = 0
+                        else:
+                            self.log(f'JOIN_ACK rejection ignored from non-target {pck.get("src_addr")} (expected {self.last_join_target})')
                         log_delivery()
                         return
 
@@ -1893,6 +1953,7 @@ class SensorNode(wsn.Node):
 
                     self.log(f'JOIN_ACK accepted: uid={self.id} parent={self.parent_address} addr={self.addr}')
                     self.last_join_target = None
+                    self.last_join_target_uid = None
                     self.last_join_time = 0
 
                     # update role
@@ -1900,6 +1961,7 @@ class SensorNode(wsn.Node):
                         self.set_role(Roles.CLUSTER_HEAD)
                     else:
                         self.set_role(Roles.REGISTERED)
+                        self.last_registered_at = self.now  # track rejoin time for cooldown
 
                     log_delivery()
                     return
@@ -1907,16 +1969,16 @@ class SensorNode(wsn.Node):
         # record delivery if we reach here
         log_delivery()
 
-    # timer handler
+    # timer handlers
     def on_timer_fired(self, name, *args, **kwargs):
-        if name == 'TIMER_ARRIVAL':  # it wakes up and set timer probe once time arrival timer fired
+        if name == 'TIMER_ARRIVAL':  # wakes up and set timer probe once time arrival timer fired
             self.scene.nodecolor(self.id, 1, 0, 0)  # sets self color to red
             if self.id not in JOIN_START_TIMES:
                 JOIN_START_TIMES[self.id] = self.now
             self.wake_up()
             self.set_timer('TIMER_PROBE', 1)
 
-        elif name == 'TIMER_PROBE':  # it sends probe if counter didn't reach the threshold once timer probe fired.
+        elif name == 'TIMER_PROBE':  # sends probe if counter didn't reach the threshold on timer probe
             if self.c_probe < self.th_probe:
                 self.send_probe()
                 self.c_probe += 1
@@ -1928,7 +1990,7 @@ class SensorNode(wsn.Node):
                     self.addr = wsn.Addr(1, 254)  # root is always network 1
                     self.ch_addr = wsn.Addr(1, 254)
                     self.root_addr = self.addr
-                    self.hop_count = 0
+                    self.hops_to_root = 0
                     self.log(f'ROOT online id={self.id}, addr={self.addr}, tx_range={self.tx_range}, max_children={config.SIM_MAX_CHILDREN}, max_networks={config.SIM_MAX_NETWORKS}')
                     self.send_heart_beat()  # advertise immediately
                     self.set_timer('TIMER_HEART_BEAT', config.HEARTH_BEAT_TIME_INTERVAL)
@@ -1940,42 +2002,76 @@ class SensorNode(wsn.Node):
             self.send_heart_beat()
             self.set_timer('TIMER_HEART_BEAT', config.HEARTH_BEAT_TIME_INTERVAL)
 
-            # Increment counter and perform table maintenance every 5 heartbeats
+            # perform table maintenance every 5 heartbeats
             self.heartbeat_counter += 1
-            if self.heartbeat_counter >= 5:  # 5 seconds = 5 × 1 second intervals
+            if self.heartbeat_counter >= 5:
                 self.maintain_tables()
-                self.heartbeat_counter = 0  # reset counter
+                self.heartbeat_counter = 0
 
-        elif name == 'TIMER_ROUTERABLE_CHECK':  # check if can become router and attempt
+        # CH send keepalive timer
+        elif name == 'TIMER_CH_KEEPALIVE':
             if self.role == Roles.CLUSTER_HEAD:
+                if self.ch_addr is not None:
+                    self.send_child_network_keepalive()
+                self.set_timer('TIMER_CH_KEEPALIVE', config.CH_KEEPALIVE_INTERVAL)
+
+        # check if we can make ourselves a router periodically
+        elif name == 'TIMER_ROUTERABLE_CHECK':
+            if self.role == Roles.CLUSTER_HEAD and config.ENABLE_ROUTERS:
                 self.attempt_member_promotion(post_role='router')
             self.set_timer('TIMER_ROUTERABLE_CHECK', config.ROUTERABLE_CHECK_INTERVAL)
 
-        elif name == 'TIMER_JOIN_REQ':  # if it has not received heart beat messages before, it sets timer again and wait heart beat messages once join request timer fired
+        # join request timer, resend join request every now and thenm
+        elif name == 'TIMER_JOIN_REQ':
+            # if we don't have any neighbors and not unregistered become unregistered
             if len(self.neighbors_table) == 0 and self.role != Roles.UNREGISTERED:
                 self.become_unregistered()
-            else:  # otherwise it chose one of them and sends join request
-                # self.log(f'TIMER_JOIN_REQ neighbor_count={len(self.neighbors_table)}')
+            # otherwise select and join
+            else:
                 self.select_and_join()
 
+        # send sensor data packet
         elif name == 'TIMER_SENSOR':
-            # data timer
             if self.addr is not None or self.ch_addr is not None:
-                pck = self.build_common_packet('DATA', ack=False, dst_addr=wsn.Addr(1, 254))
-                pck.update({'payload': random.uniform(10, 50)})
-                self.route_and_forward_package(pck)
+                if config.SENSOR_DATA_TO_ROOT:
+                    # send to root
+                    dst_addr = wsn.Addr(1, 254)
+                else:
+                    # find random valid destination
+                    valid_destinations = [
+                        n for n in ALL_NODES
+                        if n.id != self.id
+                        and getattr(n, 'is_alive', True)
+                        and n.addr is not None
+                        and n.role in (Roles.ROOT, Roles.CLUSTER_HEAD, Roles.REGISTERED, Roles.ROUTER)
+                    ]
+                    if valid_destinations:
+                        target_node = random.choice(valid_destinations)
+                        dst_addr = target_node.ch_addr if target_node.ch_addr else target_node.addr
+                    else:
+                        dst_addr = None
 
+                if dst_addr:
+                    pck, _ = self.build_common_packet('DATA', ack=False, dst_addr=dst_addr)
+                    pck.update({'payload': random.uniform(10, 50)})
+                    DATA_PACKETS_SENT[0] += 1
+                    self.route_and_forward_package(pck)
+
+            # schedule next timer
             timer_duration = self.id % config.SENSOR_BASE_INTERVAL
             if timer_duration == 0:
                 timer_duration = 1
             timer_duration += random.uniform(0, 1)
             self.set_timer('TIMER_SENSOR', timer_duration)
+
+        # export clusterhead distances csv
         elif name == 'TIMER_EXPORT_CH_CSV':
-            # root exports clusterhead distances csv
             if self.role == Roles.ROOT:
                 write_clusterhead_distances_csv()
                 # reschedule
                 self.set_timer('TIMER_EXPORT_CH_CSV', config.EXPORT_CH_CSV_INTERVAL)
+
+        # export neighbor distances csv
         elif name == 'TIMER_EXPORT_NEIGHBOR_CSV':
             if self.role == Roles.ROOT:
                 # write_neighbor_distances_csv("neighbor_distances.csv")
