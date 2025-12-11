@@ -1,7 +1,8 @@
 ## simulation properties
 ENABLE_ROUTERS = True # enable routers
 TREE_ONLY = False # use tree routing only
-NEIGHBOR_HOP_LIMIT = 5 # max hops to keep in neighbor table
+SIM_NODE_COUNT = 100 # node count in simulation
+NEIGHBOR_HOP_LIMIT = 2 # max hops to keep in neighbor table
 PACKET_LOSS_PROB = 0.01 # probability to drop a packet
 SIM_MAX_CHILDREN = 253 # max children per cluster head [3, 253]
 SIM_MAX_NETWORKS = 253 # max child networks [2, 253]
@@ -15,8 +16,7 @@ NODES_REVIVE = False # bring killed nodes back?
 REVIVE_DELAY = 100 # delay after kill before reviving nodes
 
 
-# simulation
-SIM_NODE_COUNT = 100 # node count in simulation
+# simulation misc
 NODE_ARRIVAL_MAX = 50 # max time for nodes to wake at
 SIM_NODE_PLACING_CELL_SIZE = 75 # cell size to place one node
 SIM_DURATION = 1000 # simulation duration in seconds
@@ -28,6 +28,8 @@ SCALE = 1 # scale factor for visualization
 VISUAL_DRAW_LINKS = True # toggle drawing of parent/router links
 VISUAL_TIME_UPDATE_INTERVAL = 0.5
 TRACE_PATHS = True
+LOG_PDR_OVER_TIME = True # record PDR over time
+PDR_LOG_INTERVAL = 5 # seconds between PDR samples
 
 
 # energy tracking
@@ -61,3 +63,14 @@ BROADCAST_NET_ADDR = 255 # broadcast network address
 BROADCAST_NODE_ADDR = 255 # broadcast node address
 ROUTING_MAX_HOPS = 100 # hop limit to avoid routing loops
 NODE_TX_RANGES = [25, 50, 75, 120]  # discrete tx ranges of nodes
+
+
+def print_key_settings():
+    print("simulation:")
+    print(f"ENABLE_ROUTERS={ENABLE_ROUTERS}, TREE_ONLY={TREE_ONLY}, SENSOR_DATA_TO_ROOT={SENSOR_DATA_TO_ROOT}")
+    print(f"NEIGHBOR_HOP_LIMIT={NEIGHBOR_HOP_LIMIT}, PACKET_LOSS_PROB={PACKET_LOSS_PROB}")
+    print(f"SIM_MAX_CHILDREN={SIM_MAX_CHILDREN}, SIM_MAX_NETWORKS={SIM_MAX_NETWORKS}")
+    print("events:")
+    print(f"NODES_TO_KILL={NODES_TO_KILL}, KILL_DELAY={KILL_DELAY}, NODES_REVIVE={NODES_REVIVE}, REVIVE_DELAY={REVIVE_DELAY}")
+    print("simulation scale:")
+    print(f"SIM_NODE_COUNT={SIM_NODE_COUNT}, BATTERY_CAPACITY_MAH={BATTERY_CAPACITY_MAH}, CH_PROMOTE_TIMEOUT={CH_PROMOTE_TIMEOUT}")

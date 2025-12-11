@@ -3,6 +3,7 @@ sys.path.insert(1, '.')
 
 import math
 import csv
+from pathlib import Path
 
 from roles import Roles
 from tracking_containers import *
@@ -147,6 +148,15 @@ def write_packet_deliveries_csv(path="logs/packet_deliveries.csv"):
                 path_str,
                 path_dynamic_str,
             ])
+
+# cumulative PDR over time
+def write_pdr_over_time_csv(path="logs/pdr_over_time.csv"):
+    Path(path).parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(["time", "sent", "delivered", "pdr_pct"])
+        for sample_time, sent, delivered, pdr in PDR_SAMPLES:
+            w.writerow([f"{sample_time:.6f}", sent, delivered, f"{pdr:.4f}"])
 
 # format address for output
 def format_addr(addr):

@@ -8,7 +8,18 @@ import statistics
 from collections import defaultdict
 
 from roles import Roles
-from tracking_containers import NODE_POS, ALL_NODES, CLUSTER_HEADS, ROLE_COUNTS, ROOT_ID, PACKET_DELIVERY_LOGS, DATA_PACKETS_SENT, DATA_PACKETS_DELIVERED, ROLE_HISTORY
+from tracking_containers import (
+    NODE_POS,
+    ALL_NODES,
+    CLUSTER_HEADS,
+    ROLE_COUNTS,
+    ROOT_ID,
+    PACKET_DELIVERY_LOGS,
+    DATA_PACKETS_SENT,
+    DATA_PACKETS_DELIVERED,
+    ROLE_HISTORY,
+    PDR_SAMPLES,
+)
 from sensor_node import SensorNode
 from csv_utils import (
     write_node_distances_csv,
@@ -16,6 +27,7 @@ from csv_utils import (
     write_join_times_csv,
     write_packet_deliveries_csv,
     write_node_tables_csv,
+    write_pdr_over_time_csv,
     get_average_join_time,
     get_join_time_stats,
 )
@@ -25,6 +37,8 @@ from time import perf_counter
 KILL_DELAY = getattr(config, "KILL_DELAY", 50)
 KILL_TIME = config.NODE_ARRIVAL_MAX + KILL_DELAY
 NUM_FAILURES = max(int(getattr(config, "NODES_TO_KILL", 5)), 0)
+PDR_LOG_INTERVAL = max(float(getattr(config, "PDR_LOG_INTERVAL", 10)), 0)
+LOG_PDR_OVER_TIME = bool(getattr(config, "LOG_PDR_OVER_TIME", True))
 
 def create_network(node_class, number_of_nodes=100):
     edge = math.ceil(math.sqrt(number_of_nodes))
@@ -94,6 +108,16 @@ def schedule_random_failure(delay=KILL_TIME, num_failures=1):
     sim.delayed_exec(delay, kill_multiple)
 
 
+def log_pdr_sample():
+    # record cumulative pdr sample and schedule next sample
+    sent = DATA_PACKETS_SENT[0]
+    delivered = DATA_PACKETS_DELIVERED[0]
+    pdr = (delivered / sent * 100) if sent > 0 else 0
+    PDR_SAMPLES.append((sim.env.now, sent, delivered, pdr))
+    if LOG_PDR_OVER_TIME and PDR_LOG_INTERVAL > 0:
+        sim.delayed_exec(PDR_LOG_INTERVAL, log_pdr_sample)
+
+
 # creating random network
 create_network(SensorNode, config.SIM_NODE_COUNT)
 root_pos = NODE_POS.get(ROOT_ID)
@@ -102,6 +126,10 @@ print(f"root id={ROOT_ID}, pos={root_pos}, nodes={config.SIM_NODE_COUNT}, tx_ran
 # write initial node distances
 write_node_distances_csv()
 write_node_distance_matrix_csv()
+
+# start PDR sampling
+if LOG_PDR_OVER_TIME and PDR_LOG_INTERVAL > 0:
+    log_pdr_sample()
 
 # schedule removal of nodes after time to form
 if NUM_FAILURES > 0:
@@ -131,6 +159,7 @@ if __name__ == "__main__":
     # write join times and packet deliveries
     write_join_times_csv()
     write_packet_deliveries_csv()
+    write_pdr_over_time_csv()
 
     min_join, avg_join, max_join, joined_count = get_join_time_stats()
     if avg_join is None:
@@ -225,4 +254,4 @@ if __name__ == "__main__":
 
     # write node tables summary
     write_node_tables_csv()
-
+    config.print_key_settings()

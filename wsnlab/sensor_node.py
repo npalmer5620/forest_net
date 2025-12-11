@@ -207,6 +207,10 @@ class SensorNode(wsn.Node):
         if created is None:
             return
 
+        # count data deliveries
+        if pck.get('type') == 'DATA':
+            DATA_PACKETS_DELIVERED[0] += 1
+
         delivered = pck.get('arrival_time', self.now)
         path_list = pck.get('path', [])
         if isinstance(path_list, list):
@@ -1738,7 +1742,6 @@ class SensorNode(wsn.Node):
                 if self.role == Roles.ROOT:
                     # self.log(f'DATA rx from uid={pck.get("uid")}, src_addr={pck.get("src_addr")}, sensor_value={pck.get("sensor_value")}')
                     None
-                DATA_PACKETS_DELIVERED[0] += 1
                 log_delivery()
                 return
 
