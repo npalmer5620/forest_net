@@ -241,7 +241,7 @@ class Node:
             if dist <= self.tx_range:
                 # packet loss
                 if config.PACKET_LOSS_PROB > 0 and random.random() < config.PACKET_LOSS_PROB:
-                    self.log(f"Packet ({pck['type']}) lost en route to Node #{node.id}")
+                    # self.log(f"packet ({pck['type']}) lost en route to Node #{node.id}")
                     continue
                 if node.can_receive(pck):
                     prop_time = dist / 1000000 - 0.00001 if dist / 1000000 - 0.00001 >0 else 0.00001

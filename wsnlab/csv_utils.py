@@ -162,7 +162,7 @@ def write_node_tables_csv(path="logs/node_tables.csv"):
 
     def get_battery_pct(node):
         battery_mj = getattr(node, "battery_mj", 0)
-        mah = battery_mj / (config.BATTERY_VOLTAGE * 3600)
+        mah = battery_mj / (3.0 * 3600)
         return (mah / max(config.BATTERY_CAPACITY_MAH, 1e-9)) * 100
 
     with open(path, "w", newline="") as f:
