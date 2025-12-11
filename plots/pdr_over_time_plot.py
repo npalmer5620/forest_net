@@ -37,7 +37,7 @@ def plot():
 
     times, pdrs = load_series(csv_path)
     # only show samples after certain time
-    clipped = [(t, p) for t, p in zip(times, pdrs) if t >= 50]
+    clipped = [(t, p) for t, p in zip(times, pdrs) if t >= 0]
     if clipped:
         times, pdrs = zip(*clipped)
         times = list(times)
@@ -51,7 +51,7 @@ def plot():
     ax.plot(times, pdrs, linewidth=1.2)
     ax.set_xlabel("Simulation Time (s)")
     ax.set_ylabel("PDR (\%)")
-    ax.set_ylim(0, 100)
+    ax.set_ylim(75, 100)
     ax.grid(True, linestyle="--", linewidth=0.4, alpha=0.7)
 
     fig.tight_layout()
