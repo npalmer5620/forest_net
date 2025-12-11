@@ -1,7 +1,7 @@
 ## simulation properties
 ENABLE_ROUTERS = True # enable routers
 TREE_ONLY = False # use tree routing only
-SIM_NODE_COUNT = 100 # node count in simulation
+SIM_NODE_COUNT = 50 # node count in simulation
 NEIGHBOR_HOP_LIMIT = 2 # max hops to keep in neighbor table
 PACKET_LOSS_PROB = 0.01 # probability to drop a packet
 SIM_MAX_CHILDREN = 253 # max children per cluster head [3, 253]
