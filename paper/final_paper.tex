@@ -46,71 +46,82 @@
 \section*{I.\ INTRODUCTION}
 Wireless sensor networks (WSNs) are used in a variety of applications, such as environmental monitoring, industrial automation, healthcare, and increasingly, in consumer devices. The necessity for ease of deployment and lower cost hardware have made WSNs popular in recent years, but they also pose significant challenges in terms of self-organization, energy efficiency, and robustness.
 
-\subsection*{Self-Organization}
+\subsection*{A. Self-Organization}
 Self-organization is a crucial advantage of WSNs, allowing deployments in remote or inaccessible locations, making it impractical to pre-configure infrastructure. Self-organization allows nodes to form a network topology and select routing paths dynamically based on the network conditions and the environment. Building an optimal topology presents many challenges given the dynamic nature of the environment, limited computational resources, and energy resources of most low-cost hardware. Most networks use one of two topologies: a hierarchical cluster-tree or a mesh topology.
 
 \begin{itemize}
   \item \textbf{Cluster-Tree}
         \begin{itemize}
           \item Hierarchical network with a single root node and multiple cluster-heads
-          \item Cluster-heads are responsible for routing data to and from their cluster
+          \item Cluster-heads are responsible for routing data to and from their cluster, only they must maintain routing information for their child members and child networks below them
           \item Centralized routing allows for greater energy efficiency as the routing can be optimized for the entire network
         \end{itemize}
   \item \textbf{Mesh}
         \begin{itemize}
           \item Peer-to-peer network with no central nodes or defined hierarchy
-          \item Each node is responsible for routing data to and from its neighbors
+          \item Each node is responsible for routing data to and from its neighbors, maintaining routing information for all its n-hop neighbors
           \item Decentralized routing allows for greater robustness to node and link failures as the routing can adapt on-demand to changes in the network topology
         \end{itemize}
 \end{itemize}
 
+Despite these advantages, both topologies have their limitations. Cluster-tree topologies can be fragile, as the failure of a cluster-head can isolate an entire cluster from the network causing a cascading failure. While mesh topologies can incur significant overhead due to the need for each node to maintain routing information for all its neighbors, leading to increased overhead and energy use. These shortcomings motivate the need for a hybrid approach that combines the strengths of both topologies.
 
+\subsection*{B. Hybrid WSNs}
+To address these limitations, hybrid WSNs that incorporate both cluster-tree and mesh routing have been proposed. In these approaches, nodes are organized into a cluster-tree topology, but they can also use mesh links to route data between clusters. This allows for greater robustness to node failures, as nodes can use mesh links to route bypass failed cluster-heads. Additionally, the cluster-tree structure allows for more efficient routing within clusters, reducing the need for each node to maintain routing information for all its neighbors.
 
+\subsection*{C. Contributions}
+In this paper, we present the design and evaluation of a hybrid WSN that combines cluster-tree and mesh routing. We first describe the design of the hybrid topology formation and routing protocol, including the use of router-bridge nodes to improve energy efficiency between cluster heads. We then implement the protocol via a Python simulation and evaluate its performance in terms of average join time, connectivity, packet delivery, and energy use, under node and link losses. Finally, we compare the performance of our hybrid WSN with existing WSNs.
 
-\begin{itemize}
-  \item \textbf{Provide context and motivation:}
-        \begin{itemize}
-          \item Briefly describe wireless sensor networks and why
-                \emph{self-organizing} behavior is important (e.g., large
-                scale, no fixed infrastructure, battery-powered nodes).
-          \item Explain why topology formation and routing are challenging in
-                such networks.
-        \end{itemize}
-  \item \textbf{State the problem:}
-        \begin{itemize}
-          \item Discuss limitations of using only a cluster-tree topology or
-                only mesh routing (e.g., fragility, overhead, latency,
-                energy imbalance).
-          \item Motivate the need for a hybrid approach.
-        \end{itemize}
-  \item \textbf{Present the proposed solution (high level):}
-        \begin{itemize}
-          \item Introduce the idea of a hybrid cluster-tree + mesh network:
-                nodes organize into a cluster-tree but can also use mesh
-                links for robust routing.
-        \end{itemize}
-  \item \textbf{Summarize contributions (bullet list):}
-        Typical items might include:
-        \begin{itemize}
-          \item Design of a hybrid cluster-tree + mesh topology formation
-                and routing protocol.
-          \item Implementation of the protocol in a simulation platform.
-          \item Evaluation of average join time, connectivity, packet
-                delivery, and energy-related behavior under node and link
-                losses.
-        \end{itemize}
-  \item \textbf{Outline of the paper:}
-        \begin{itemize}
-          \item Conclude with a short paragraph describing the organization
-                of the paper.
-        \end{itemize}
-\end{itemize}
+% \begin{itemize}
+%   \item \textbf{Provide context and motivation:}
+%         \begin{itemize}
+%           \item Briefly describe wireless sensor networks and why
+%                 \emph{self-organizing} behavior is important (e.g., large
+%                 scale, no fixed infrastructure, battery-powered nodes).
+%           \item Explain why topology formation and routing are challenging in
+%                 such networks.
+%         \end{itemize}
+%   \item \textbf{State the problem:}
+%         \begin{itemize}
+%           \item Discuss limitations of using only a cluster-tree topology or
+%                 only mesh routing (e.g., fragility, overhead, latency,
+%                 energy imbalance).
+%           \item Motivate the need for a hybrid approach.
+%         \end{itemize}
+%   \item \textbf{Present the proposed solution (high level):}
+%         \begin{itemize}
+%           \item Introduce the idea of a hybrid cluster-tree + mesh network:
+%                 nodes organize into a cluster-tree but can also use mesh
+%                 links for robust routing.
+%         \end{itemize}
+%   \item \textbf{Summarize contributions (bullet list):}
+%         Typical items might include:
+%         \begin{itemize}
+%           \item Design of a hybrid cluster-tree + mesh topology formation
+%                 and routing protocol.
+%           \item Implementation of the protocol in a simulation platform.
+%           \item Evaluation of average join time, connectivity, packet
+%                 delivery, and energy-related behavior under node and link
+%                 losses.
+%         \end{itemize}
+%   \item \textbf{Outline of the paper:}
+%         \begin{itemize}
+%           \item Conclude with a short paragraph describing the organization
+%                 of the paper.
+%         \end{itemize}
+% \end{itemize}
 
 \vspace{1em}
 \section*{II.\ RELATED WORK}
+We briefly review prior works on cluster-tree and mesh routing protocols in WSNs, as well as existing hybrid approaches.
 
-In this section, show awareness of prior work and
-position your design with respect to it. Specifically:
+\subsection*{A.\ Cluster-Tree Protocols}
+
+\subsection*{B.\ Mesh Routing Protocols}
+
+\subsection*{C.\ Hybrid Approaches}
+
+\subsection*{D.\ Summary}
 
 \begin{itemize}
   \item \textbf{Summarize relevant literature:}
@@ -138,9 +149,16 @@ position your design with respect to it. Specifically:
 
 \vspace{1em}
 \section*{III.\ SYSTEM MODEL AND ASSUMPTIONS}
+We describe the system model and assumptions used in our design and evaluation.
 
-This section defines the environment in which the protocol operates.
-You  should clearly state all assumptions:
+\subsection*{A.\ Network Model}
+We consider a network consisting of N sensor nodes deployed uniformly at random in a defined deployment area. The network includes one designated root node that initiates network formation, and the remaining nodes self-organize into a hybrid cluster-tree and mesh topology. Nodes communicate via a single radio channel with a fixed transmission range, and we assume static node placement throughout the simulation.
+
+\subsection*{B.\ Traffic Model}
+To simulate a typical WSN use-case, we consider periodic data collection where sensor nodes report measurements to the sink. Once a node has joined the network and is in the REGISTERED, CLUSTER\_HEAD, or ROUTER state, we begin generating traffic. Each node generates periodic data packets destined for the root node (sink), simulating a many-to-one traffic pattern typical of WSNs. The packet generation interval is set to a fixed value of 0.1 seconds, resulting in a constant data rate per node.
+
+\subsection*{C.\ Energy Model}
+Each node is initialized with a finite energy budget and consumes energy based on its radio state. We model energy consumption for transmit (TX) and receive (RX) states, with power draw values derived from typical CC2420 radio specifications. Nodes that deplete their energy budget become permanently disabled and cease all communication.
 
 \begin{itemize}
   \item \textbf{Network model:}
@@ -179,6 +197,9 @@ You  should clearly state all assumptions:
 This section describes the proposed protocol in detail.
 
 \subsection {Overall Architecture}
+We propose a hybrid cluster-tree mesh topology where nodes are organized into a hierarchical cluster-tree structure, but they can also use mesh links to route data between clusters. This hybrid approach leverages the strengths of both cluster-tree and mesh routing.
+
+Our architecture includes the following Node types, CLUSTER_MEMBER, CLUSTER_HEAD, ROUTER, GATEWAY, and ROOT_NODE
 
 \begin{itemize}
   \item Describe the roles of different nodes:
@@ -198,13 +219,13 @@ This section describes the proposed protocol in detail.
 
 \end{itemize}
 
-A  high-level figure illustrating the architecture (tree backbone with some cross-layer mesh links) if given in Figure \ref{fig:highLevel}.
+A  high-level figure illustrating the architecture (tree backbone with some cross-layer mesh links) if given in Figure \ref{fig:wsn_arch}.
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\linewidth]{fig1.png}
+  \includegraphics[width=\linewidth]{figures/wsn_arch.png}
   \caption{A high-level architecture of the Hybrid Cluster Tree Mesh Network}
-  \label{fig:highLevel}
+  \label{fig:wsn_arch}
 \end{figure}
 
 \subsection{Energy Consumption Model}

@@ -7,7 +7,8 @@
 \providecommand{\BIBentrySTDinterwordspacing}{\spaceskip=0pt\relax}
 \providecommand{\BIBentryALTinterwordstretchfactor}{4}
 \providecommand{\BIBentryALTinterwordspacing}{\spaceskip=\fontdimen2\font plus
-\BIBentryALTinterwordstretchfactor\fontdimen3\font minus \fontdimen4\font\relax}
+\BIBentryALTinterwordstretchfactor\fontdimen3\font minus
+  \fontdimen4\font\relax}
 \providecommand{\BIBforeignlanguage}[2]{{%
 \expandafter\ifx\csname l@#1\endcsname\relax
 \typeout{** WARNING: IEEEtran.bst: No hyphenation pattern has been}%
@@ -21,81 +22,129 @@
 \BIBdecl
 
 \bibitem{wooten2015electronics}
-J.~M. Wooten, D.~M. Bevly, and J.~Y. Hung, ``Piezoelectric polymer-based collision detection sensor for robotic applications,'' \emph{Electronics}, vol.~4, pp. 204--220, 2015.
+J.~M. Wooten, D.~M. Bevly, and J.~Y. Hung, ``Piezoelectric polymer-based
+  collision detection sensor for robotic applications,'' \emph{Electronics},
+  vol.~4, pp. 204--220, 2015.
 
 \bibitem{chao2025sciadv}
-X.~Chao \emph{et~al.}, ``Bioinspired twist-hyperbolic metamaterial for impact buffering and self-powered real-time sensing in uavs,'' \emph{Science Advances}, vol.~11, p. eadw6179, 2025.
+X.~Chao \emph{et~al.}, ``Bioinspired twist-hyperbolic metamaterial for impact
+  buffering and self-powered real-time sensing in uavs,'' \emph{Science
+  Advances}, vol.~11, p. eadw6179, 2025.
 
 \bibitem{he2023natcomm}
-Q.~He, Y.~Zeng, L.~Jiang \emph{et~al.}, ``Growing recyclable and healable piezoelectric composites in 3d printed bioinspired structure for protective wearable sensor,'' \emph{Nature Communications}, vol.~14, p. 6477, 2023.
+Q.~He, Y.~Zeng, L.~Jiang \emph{et~al.}, ``Growing recyclable and healable
+  piezoelectric composites in 3d printed bioinspired structure for protective
+  wearable sensor,'' \emph{Nature Communications}, vol.~14, p. 6477, 2023.
 
 \bibitem{ambroziak2023sensors}
-L.~Ambroziak, D.~O{\l}dziej, and A.~Koszewnik, ``Multirotor motor failure detection with piezo sensor,'' \emph{Sensors}, vol.~23, no.~2, p. 1048, 2023.
+L.~Ambroziak, D.~O{\l}dziej, and A.~Koszewnik, ``Multirotor motor failure
+  detection with piezo sensor,'' \emph{Sensors}, vol.~23, no.~2, p. 1048, 2023.
 
 \bibitem{goncalves2025energies}
-L.~d.~S. Goncalves, R.~M.~L. Pereira, R.~S. Tyszler, M.~C. A.~M. Morais, and C.~R.~H. Barbosa, ``Application of pvdf transducers for piezoelectric energy harvesting in unmanned aerial vehicles,'' \emph{Energies}, vol.~18, p. 4759, 2025.
+L.~d.~S. Goncalves, R.~M.~L. Pereira, R.~S. Tyszler, M.~C. A.~M. Morais, and
+  C.~R.~H. Barbosa, ``Application of pvdf transducers for piezoelectric energy
+  harvesting in unmanned aerial vehicles,'' \emph{Energies}, vol.~18, p. 4759,
+  2025.
 
 \bibitem{akbar2019icae}
-M.~Akbar, A.~R. Firdaus, S.~Wibowo, and N.~Wirawan, ``Piezoelectric energy harvesting from a fixed-wing unmanned aerial vehicle,'' in \emph{2019 2nd International Conference on Applied Engineering (ICAE)}, 2019, pp. 1--4.
+M.~Akbar, A.~R. Firdaus, S.~Wibowo, and N.~Wirawan, ``Piezoelectric energy
+  harvesting from a fixed-wing unmanned aerial vehicle,'' in \emph{2019 2nd
+  International Conference on Applied Engineering (ICAE)}, 2019, pp. 1--4.
 
 \bibitem{merei2025drones}
-A.~Merei, H.~Mcheick, A.~Ghaddar, and D.~Rebaine, ``A survey on obstacle detection and avoidance methods for uavs,'' \emph{Drones}, vol.~9, p. 203, 2025.
+A.~Merei, H.~Mcheick, A.~Ghaddar, and D.~Rebaine, ``A survey on obstacle
+  detection and avoidance methods for uavs,'' \emph{Drones}, vol.~9, p. 203,
+  2025.
 
 \bibitem{yasin2020ieeeaccess}
-J.~N. Yasin \emph{et~al.}, ``Unmanned aerial vehicles (uavs): Collision avoidance systems and approaches,'' \emph{IEEE Access}, vol.~8, pp. 105\,139--105\,155, 2020.
+J.~N. Yasin \emph{et~al.}, ``Unmanned aerial vehicles (uavs): Collision
+  avoidance systems and approaches,'' \emph{IEEE Access}, vol.~8, pp.
+  105\,139--105\,155, 2020.
 
 \bibitem{comp_review_drone_collision_systems}
-M.~R. Rezaee, N.~A. W.~A. Hamid, M.~Hussin, and Z.~A. Zukarnain, ``Comprehensive review of drones collision avoidance schemes: Challenges and open issues,'' \emph{IEEE Transactions on Intelligent Transportation Systems}, vol.~25, no.~7, pp. 6397--6426, 2024.
+M.~R. Rezaee, N.~A. W.~A. Hamid, M.~Hussin, and Z.~A. Zukarnain,
+  ``Comprehensive review of drones collision avoidance schemes: Challenges and
+  open issues,'' \emph{IEEE Transactions on Intelligent Transportation
+  Systems}, vol.~25, no.~7, pp. 6397--6426, 2024.
 
 \bibitem{feng2021materials}
-T.~Feng and M.~H.~F. Aliabadi, ``Structural integrity assessment of composite plates with embedded pzt transducers for structural health monitoring,'' \emph{Materials}, vol.~14, no.~20, p. 6148, 2021.
+T.~Feng and M.~H.~F. Aliabadi, ``Structural integrity assessment of composite
+  plates with embedded pzt transducers for structural health monitoring,''
+  \emph{Materials}, vol.~14, no.~20, p. 6148, 2021.
 
 \bibitem{wang2024ieeeinternational}
-R.~Wang, Z.~Guo, Y.~Chen, X.~Wang, and B.~M. Chen, ``Air bumper: A collision detection and reaction framework for autonomous mav navigation,'' pp. 15\,735--15\,741, 2024.
+R.~Wang, Z.~Guo, Y.~Chen, X.~Wang, and B.~M. Chen, ``Air bumper: A collision
+  detection and reaction framework for autonomous mav navigation,'' pp.
+  15\,735--15\,741, 2024.
 
 \bibitem{lirias76938}
-J.~Verbeke, S.~Debruyne, P.~Sas, D.~Moens, and A.~VanDeWalle, ``\BIBforeignlanguage{eng}{Vibration analysis of a uav multirotor frame},'' 2016-09-20.
+J.~Verbeke, S.~Debruyne, P.~Sas, D.~Moens, and A.~VanDeWalle,
+  ``\BIBforeignlanguage{eng}{Vibration analysis of a uav multirotor frame},''
+  2016-09-20.
 
 \bibitem{gi-10-101-2021}
 \BIBentryALTinterwordspacing
-L.~E. Tuck, C.~Samson, J.~Lalibert\'e, and M.~Cunningham, ``Magnetic interference mapping of four types of unmanned aircraft systems intended for aeromagnetic surveying,'' \emph{Geoscientific Instrumentation, Methods and Data Systems}, vol.~10, no.~1, pp. 101--112, 2021. [Online]. Available: \url{https://gi.copernicus.org/articles/10/101/2021/}
+L.~E. Tuck, C.~Samson, J.~Lalibert\'e, and M.~Cunningham, ``Magnetic
+  interference mapping of four types of unmanned aircraft systems intended for
+  aeromagnetic surveying,'' \emph{Geoscientific Instrumentation, Methods and
+  Data Systems}, vol.~10, no.~1, pp. 101--112, 2021. [Online]. Available:
+  \url{https://gi.copernicus.org/articles/10/101/2021/}
 \BIBentrySTDinterwordspacing
 
 \bibitem{drones6080185}
 \BIBentryALTinterwordspacing
-E.~Aldao, L.~M. González-de Santos, and H.~González-Jorge, ``Lidar based detect and avoid system for uav navigation in uam corridors,'' \emph{Drones}, vol.~6, no.~8, 2022. [Online]. Available: \url{https://www.mdpi.com/2504-446X/6/8/185}
+E.~Aldao, L.~M. González-de Santos, and H.~González-Jorge, ``Lidar based
+  detect and avoid system for uav navigation in uam corridors,'' \emph{Drones},
+  vol.~6, no.~8, 2022. [Online]. Available:
+  \url{https://www.mdpi.com/2504-446X/6/8/185}
 \BIBentrySTDinterwordspacing
 
 \bibitem{ma2023}
-C.~Ma, Y.~Fu, D.~Wang, R.~Guo, X.~Zhao, and J.~Fang, ``Yolo-uav: Object detection method of unmanned aerial vehicle imagery based on efficient multi-scale feature fusion,'' \emph{IEEE Access}, vol.~11, pp. 126\,857--126\,878, 2023.
+C.~Ma, Y.~Fu, D.~Wang, R.~Guo, X.~Zhao, and J.~Fang, ``Yolo-uav: Object
+  detection method of unmanned aerial vehicle imagery based on efficient
+  multi-scale feature fusion,'' \emph{IEEE Access}, vol.~11, pp.
+  126\,857--126\,878, 2023.
 
 \bibitem{wang2023airbumper}
 \BIBentryALTinterwordspacing
-R.~Wang, Z.~Guo, Y.~Chen, X.~Wang, and B.~M. Chen, ``Air bumper: A collision detection and reaction framework for autonomous mav navigation,'' 2023. [Online]. Available: \url{https://arxiv.org/abs/2307.06101}
+R.~Wang, Z.~Guo, Y.~Chen, X.~Wang, and B.~M. Chen, ``Air bumper: A collision
+  detection and reaction framework for autonomous mav navigation,'' 2023.
+  [Online]. Available: \url{https://arxiv.org/abs/2307.06101}
 \BIBentrySTDinterwordspacing
 
 \bibitem{guanglei2016}
-M.~Guanglei and P.~Haibing, ``The application of ultrasonic sensor in the obstacle avoidance of quad-rotor uav,'' in \emph{2016 IEEE Chinese Guidance, Navigation and Control Conference (CGNCC)}, 2016, pp. 976--981.
+M.~Guanglei and P.~Haibing, ``The application of ultrasonic sensor in the
+  obstacle avoidance of quad-rotor uav,'' in \emph{2016 IEEE Chinese Guidance,
+  Navigation and Control Conference (CGNCC)}, 2016, pp. 976--981.
 
 \bibitem{gageik2015}
-N.~Gageik, P.~Benz, and S.~Montenegro, ``Obstacle detection and collision avoidance for a uav with complementary low-cost sensors,'' \emph{IEEE Access}, vol.~3, pp. 599--609, 2015.
+N.~Gageik, P.~Benz, and S.~Montenegro, ``Obstacle detection and collision
+  avoidance for a uav with complementary low-cost sensors,'' \emph{IEEE
+  Access}, vol.~3, pp. 599--609, 2015.
 
 \bibitem{hugler2018}
-P.~Hügler, F.~Roos, M.~Schartel, M.~Geiger, and C.~Waldschmidt, ``Radar taking off: New capabilities for uavs,'' \emph{IEEE Microwave Magazine}, vol.~19, no.~7, pp. 43--53, 2018.
+P.~Hügler, F.~Roos, M.~Schartel, M.~Geiger, and C.~Waldschmidt, ``Radar taking
+  off: New capabilities for uavs,'' \emph{IEEE Microwave Magazine}, vol.~19,
+  no.~7, pp. 43--53, 2018.
 
 \bibitem{Al-Kaff2017}
 \BIBentryALTinterwordspacing
-A.~Al-Kaff, F.~García, D.~Martín, A.~De~La~Escalera, and J.~M. Armingol, ``Obstacle detection and avoidance system based on monocular camera and size expansion algorithm for uavs,'' \emph{Sensors}, vol.~17, no.~5, 2017. [Online]. Available: \url{https://www.mdpi.com/1424-8220/17/5/1061}
+A.~Al-Kaff, F.~García, D.~Martín, A.~De~La~Escalera, and J.~M. Armingol,
+  ``Obstacle detection and avoidance system based on monocular camera and size
+  expansion algorithm for uavs,'' \emph{Sensors}, vol.~17, no.~5, 2017.
+  [Online]. Available: \url{https://www.mdpi.com/1424-8220/17/5/1061}
 \BIBentrySTDinterwordspacing
 
 \bibitem{mBlock}
 \BIBentryALTinterwordspacing
-Makeblock, ``mbot mega,'' 2021. [Online]. Available: \url{https://support.makeblock.com/hc/en-us/sections/1500001152162-mBot-Mega}
+Makeblock, ``mbot mega,'' 2021. [Online]. Available:
+  \url{https://support.makeblock.com/hc/en-us/sections/1500001152162-mBot-Mega}
 \BIBentrySTDinterwordspacing
 
 \bibitem{AD3}
 \BIBentryALTinterwordspacing
-Digilent, ``Analog disvoery 3,'' 2023. [Online]. Available: \url{https://digilent.com/shop/analog-discovery-3/}
+Digilent, ``Analog disvoery 3,'' 2023. [Online]. Available:
+  \url{https://digilent.com/shop/analog-discovery-3/}
 \BIBentrySTDinterwordspacing
 
 \end{thebibliography}

@@ -1,14 +1,14 @@
 # Fdb version 4
-["bibtex final_paper"] 1765396782.0974 "final_paper.aux" "final_paper.bbl" "final_paper" 1765397166.90137 0
+["bibtex final_paper"] 1765492352.00652 "final_paper.aux" "final_paper.bbl" "final_paper" 1765520507.05586 0
   "./references.bib" 1765394100.88126 11351 13c58a22e44d6d180e325d5655f6a4f4 ""
   "/opt/homebrew/Cellar/texlive/20250308_2/share/texmf-dist/bibtex/bst/ieeetran/IEEEtran.bst" 1741388039 57748 7c8250ecf02814ce6ddc0cdbb63df1dd ""
-  "final_paper.aux" 1765397166.7333 6168 62f2f539b8d684d8946d5fc0f9fb5df6 "pdflatex"
+  "final_paper.aux" 1765520506.89617 6167 e2422d4bee423b11fcf6a33b706d6d5d "pdflatex"
   (generated)
   "final_paper.bbl"
   "final_paper.blg"
   (rewritten before read)
-["pdflatex"] 1765397165.73518 "/Users/nicknationwide/ms_notes/EE662Fall2025/paper/final_paper.tex" "final_paper.pdf" "final_paper" 1765397166.90154 0
-  "/Users/nicknationwide/ms_notes/EE662Fall2025/paper/final_paper.tex" 1765397165.50887 34116 760c5ce299efbf70c250eaad4812a03b ""
+["pdflatex"] 1765520506.01247 "/Users/nicknationwide/ms_notes/EE662Fall2025/paper/final_paper.tex" "final_paper.pdf" "final_paper" 1765520507.05602 2
+  "/Users/nicknationwide/ms_notes/EE662Fall2025/paper/final_paper.tex" 1765520504.73642 37892 c2ae3030c423e60e6daf098e118fc318 ""
   "/opt/homebrew/Cellar/texlive/20250308_2/share/texmf-dist/fonts/enc/dvips/base/8r.enc" 1741388039 4850 80dc9bab7f31fb78a000ccfed0e27cab ""
   "/opt/homebrew/Cellar/texlive/20250308_2/share/texmf-dist/fonts/map/fontname/texfonts.map" 1741388039 3524 cb3e574dea2d1052e39280babc910dc8 ""
   "/opt/homebrew/Cellar/texlive/20250308_2/share/texmf-dist/fonts/map/pdftex/updmap/pdftex.map" 1741388039 5466553 2748998d7db8078826afa1f272036265 ""
@@ -198,9 +198,10 @@
   "/opt/homebrew/Cellar/texlive/20250308_2/share/texmf-var/web2c/pdftex/pdflatex.fmt" 1741388039 3346125 851abcc596872d7f7285a006ccee0040 ""
   "IEEEtran.cls" 1765294106 281957 5b2e4fa15b0f7eabb840ebf67df4c0f7 ""
   "fig1.png" 0 -1 0 ""
-  "final_paper.aux" 1765397166.7333 6168 62f2f539b8d684d8946d5fc0f9fb5df6 "pdflatex"
-  "final_paper.bbl" 1765396782.14756 6250 02ce62d26ac18ced2fd2def8289d5610 "bibtex final_paper"
-  "final_paper.tex" 1765397165.50887 34116 760c5ce299efbf70c250eaad4812a03b ""
+  "figures/wsn_arch.png" 1765490036 93708 cc7d08c6accf2df3576293b4ae7a5e11 ""
+  "final_paper.aux" 1765520506.89617 6167 e2422d4bee423b11fcf6a33b706d6d5d "pdflatex"
+  "final_paper.bbl" 1765492352.05184 6348 aedc2fb97acabec0dfb1ea8929ecd41f "bibtex final_paper"
+  "final_paper.tex" 1765520504.73642 37892 c2ae3030c423e60e6daf098e118fc318 ""
   (generated)
   "final_paper.aux"
   "final_paper.log"
