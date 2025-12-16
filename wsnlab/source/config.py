@@ -19,8 +19,8 @@ REVIVE_DELAY = 100 # delay after kill before reviving nodes
 # simulation misc
 NODE_ARRIVAL_MAX = 50 # max time for nodes to wake at
 SIM_NODE_PLACING_CELL_SIZE = 75 # cell size to place one node
-SIM_DURATION = 1000 # simulation duration in seconds
-SIM_TIME_SCALE = 0.002 # real time duration of 1 second simulation time
+SIM_DURATION = 5000 # simulation duration in seconds
+SIM_TIME_SCALE = 0.001 # real time duration of 1 second simulation time
 SIM_TERRAIN_SIZE = (650, 650) # terrain size
 SIM_TITLE = 'ForestNet' # title of visualization window
 SIM_VISUALIZATION = True # visualization active
@@ -33,7 +33,7 @@ PDR_LOG_INTERVAL = 5 # seconds between PDR samples
 
 
 # energy tracking
-BATTERY_CAPACITY_MAH = 1
+BATTERY_CAPACITY_MAH = 0.25
 # tx power mapped to ranges: {0: 8.5 mA, 1: 9.9 mA, 2: 14.0 mA, 3: 17.4 mA}
 # energy per byte = (V * I * 8) / 250000
 TX_ENERGY_PER_BYTE_UJ = [0.82, 0.95, 1.34, 1.67]
@@ -54,7 +54,7 @@ EXPORT_CH_CSV_INTERVAL = 10 # simulation time units
 EXPORT_NEIGHBOR_CSV_INTERVAL = 10 # simulation time units
 JOIN_REJECT_BACKOFF = 5 # how long to wait before retrying a parent that denied join
 TIMER_JOIN_REQ_INTERVAL = 1 # how often to resend join requests
-SENSOR_BASE_INTERVAL = 0.1 # interval for sensor packets
+SENSOR_BASE_INTERVAL = 1 # interval for sensor packets
 ROUTERABLE_CHECK_INTERVAL = 10 # how often to check if node can become a router
 TABLE_MAINT_INTERVAL = 2 # how often to check and maintain routing table
 PARENT_SWITCH_HYSTERESIS = 0.01 # require % improvement in rx_cost to switch parents

@@ -19,6 +19,7 @@ from tracking_containers import (
     DATA_PACKETS_DELIVERED,
     ROLE_HISTORY,
     PDR_SAMPLES,
+    CONNECTIVITY_SAMPLES,
 )
 from sensor_node import SensorNode
 from csv_utils import (
@@ -28,6 +29,8 @@ from csv_utils import (
     write_packet_deliveries_csv,
     write_node_tables_csv,
     write_pdr_over_time_csv,
+    write_connectivity_over_time_csv,
+    write_node_deaths_csv,
     get_average_join_time,
     get_join_time_stats,
 )
@@ -39,6 +42,7 @@ KILL_TIME = config.NODE_ARRIVAL_MAX + KILL_DELAY
 NUM_FAILURES = max(int(getattr(config, "NODES_TO_KILL", 5)), 0)
 PDR_LOG_INTERVAL = max(float(getattr(config, "PDR_LOG_INTERVAL", 10)), 0)
 LOG_PDR_OVER_TIME = bool(getattr(config, "LOG_PDR_OVER_TIME", True))
+CONNECTIVITY_LOG_INTERVAL = 10  # seconds between connectivity samples
 
 def create_network(node_class, number_of_nodes=100):
     edge = math.ceil(math.sqrt(number_of_nodes))
@@ -118,6 +122,17 @@ def log_pdr_sample():
         sim.delayed_exec(PDR_LOG_INTERVAL, log_pdr_sample)
 
 
+def log_connectivity_sample():
+    # record connectivity sample and schedule next sample
+    connected_roles = (Roles.ROOT, Roles.REGISTERED, Roles.CLUSTER_HEAD, Roles.ROUTER)
+    connected = sum(1 for n in ALL_NODES if getattr(n, 'is_alive', True) and getattr(n, 'role', None) in connected_roles)
+    alive = sum(1 for n in ALL_NODES if getattr(n, 'is_alive', True))
+    connectivity_pct = (connected / alive * 100) if alive > 0 else 0
+    CONNECTIVITY_SAMPLES.append((sim.env.now, connected, alive, connectivity_pct, config.BATTERY_CAPACITY_MAH, config.SENSOR_BASE_INTERVAL))
+    if CONNECTIVITY_LOG_INTERVAL > 0:
+        sim.delayed_exec(CONNECTIVITY_LOG_INTERVAL, log_connectivity_sample)
+
+
 # creating random network
 create_network(SensorNode, config.SIM_NODE_COUNT)
 root_pos = NODE_POS.get(ROOT_ID)
@@ -130,6 +145,9 @@ write_node_distance_matrix_csv()
 # start PDR sampling
 if LOG_PDR_OVER_TIME and PDR_LOG_INTERVAL > 0:
     log_pdr_sample()
+
+# start connectivity sampling
+log_connectivity_sample()
 
 # schedule removal of nodes after time to form
 if NUM_FAILURES > 0:
@@ -160,6 +178,8 @@ if __name__ == "__main__":
     write_join_times_csv()
     write_packet_deliveries_csv()
     write_pdr_over_time_csv()
+    write_connectivity_over_time_csv()
+    write_node_deaths_csv()
 
     min_join, avg_join, max_join, joined_count = get_join_time_stats()
     if avg_join is None:

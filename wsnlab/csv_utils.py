@@ -154,9 +154,27 @@ def write_pdr_over_time_csv(path="logs/pdr_over_time.csv"):
     Path(path).parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w", newline="") as f:
         w = csv.writer(f)
-        w.writerow(["time", "sent", "delivered", "pdr_pct"])
+        w.writerow(["time", "sent", "delivered", "pdr_pct", "packet_loss_prob", "tree_only"])
         for sample_time, sent, delivered, pdr in PDR_SAMPLES:
-            w.writerow([f"{sample_time:.6f}", sent, delivered, f"{pdr:.4f}"])
+            w.writerow([f"{sample_time:.6f}", sent, delivered, f"{pdr:.4f}", f"{config.PACKET_LOSS_PROB}", config.TREE_ONLY])
+
+def write_connectivity_over_time_csv(path="logs/connectivity_over_time.csv"):
+    Path(path).parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(["time", "connected", "alive", "connectivity_pct", "e0_mah", "traffic_interval", "tree_only"])
+        for sample_time, connected, alive, conn_pct, e0, traffic in CONNECTIVITY_SAMPLES:
+            w.writerow([f"{sample_time:.6f}", connected, alive, f"{conn_pct:.4f}", f"{e0:.4f}", f"{traffic:.4f}", config.TREE_ONLY])
+
+def write_node_deaths_csv(path="logs/node_deaths.csv"):
+    from tracking_containers import NODE_DEATHS
+    Path(path).parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(["node_id", "death_time", "primary_role", "e0_mah"])
+        for node_id, death_time, primary_role in NODE_DEATHS:
+            role_name = primary_role.name if hasattr(primary_role, 'name') else str(primary_role)
+            w.writerow([node_id, f"{death_time:.6f}", role_name, f"{config.BATTERY_CAPACITY_MAH:.4f}"])
 
 # format address for output
 def format_addr(addr):

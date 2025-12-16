@@ -1,10 +1,9 @@
 \documentclass[conference]{IEEEtran}
 \IEEEoverridecommandlockouts
-% The preceding line is only needed to identify funding in the first footnote. If that is unneeded, please comment it out.
 \usepackage{cite}
 \usepackage{amsmath,amssymb,amsfonts}
 \usepackage{algorithmic}
-\usepackage[draft]{graphicx}
+\usepackage{graphicx}
 \usepackage{textcomp}
 \usepackage{xcolor}
 \usepackage{subcaption}
@@ -12,7 +11,7 @@
 % --- IMPORTANT PACKAGES FOR TIKZ/PGFPLOTS ---
 \usepackage{tikz}
 \usepackage{pgfplots}
-\pgfplotsset{compat=1.17} % or another recent version
+\pgfplotsset{compat=1.17}
 
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
@@ -25,7 +24,6 @@
     \textit{San Diego State University}\\
     San Diego, CA, USA \\
     npalmer2267@sdsu.edu}
-
 }
 
 \maketitle
@@ -43,10 +41,10 @@
 \end{IEEEkeywords}
 
 
-\section*{I.\ INTRODUCTION}
+\section{Introduction}
 Wireless sensor networks (WSNs) are used in a variety of applications, such as environmental monitoring, industrial automation, healthcare, and increasingly, in consumer devices. The necessity for ease of deployment and lower cost hardware have made WSNs popular in recent years, but they also pose significant challenges in terms of self-organization, energy efficiency, and robustness.
 
-\subsection*{A. Self-Organization}
+\subsection{Self-Organization}
 Self-organization is a crucial advantage of WSNs, allowing deployments in remote or inaccessible locations, making it impractical to pre-configure infrastructure. Self-organization allows nodes to form a network topology and select routing paths dynamically based on the network conditions and the environment. Building an optimal topology presents many challenges given the dynamic nature of the environment, limited computational resources, and energy resources of most low-cost hardware. Most networks use one of two topologies: a hierarchical cluster-tree or a mesh topology.
 
 \begin{itemize}
@@ -66,160 +64,122 @@ Self-organization is a crucial advantage of WSNs, allowing deployments in remote
 
 Despite these advantages, both topologies have their limitations. Cluster-tree topologies can be fragile, as the failure of a cluster-head can isolate an entire cluster from the network causing a cascading failure. While mesh topologies can incur significant overhead due to the need for each node to maintain routing information for all its neighbors, leading to increased overhead and energy use. These shortcomings motivate the need for a hybrid approach that combines the strengths of both topologies.
 
-\subsection*{B. Hybrid WSNs}
+\subsection{Hybrid WSNs}
 To address these limitations, hybrid WSNs that incorporate both cluster-tree and mesh routing have been proposed. In these approaches, nodes are organized into a cluster-tree topology, but they can also use mesh links to route data between clusters. This allows for greater robustness to node failures, as nodes can use mesh links to route bypass failed cluster-heads. Additionally, the cluster-tree structure allows for more efficient routing within clusters, reducing the need for each node to maintain routing information for all its neighbors.
 
-\subsection*{C. Contributions}
+\subsection{Contributions}
 In this paper, we present the design and evaluation of a hybrid WSN that combines cluster-tree and mesh routing. We first describe the design of the hybrid topology formation and routing protocol, including the use of router-bridge nodes to improve energy efficiency between cluster heads. We then implement the protocol via a Python simulation and evaluate its performance in terms of average join time, connectivity, packet delivery, and energy use, under node and link losses. Finally, we compare the performance of our hybrid WSN with existing WSNs.
 
+\vspace{1em}
+\section{Related Work}
+We briefly review prior works on cluster-tree and mesh routing protocols in WSNs, as well as existing hybrid approaches.
+
+\subsection{Cluster-Tree Protocols}
+% TODO: Add relevant cluster-tree protocols
+
+\subsection{Mesh Routing Protocols}
+% TODO: Add relevant mesh routing protocols
+
+\subsection{Hybrid Approaches}
+% TODO: Add relevant hybrid approaches
+
+\subsection{Summary}
+% TODO: Add relevant summary
+
 % \begin{itemize}
-%   \item \textbf{Provide context and motivation:}
+%   \item \textbf{Summarize relevant literature:}
 %         \begin{itemize}
-%           \item Briefly describe wireless sensor networks and why
-%                 \emph{self-organizing} behavior is important (e.g., large
-%                 scale, no fixed infrastructure, battery-powered nodes).
-%           \item Explain why topology formation and routing are challenging in
-%                 such networks.
+%           \item Describe existing cluster-tree protocols (e.g., ZigBee-like
+%                 approaches).
+%           \item Describe mesh routing protocols in sensor/IoT networks.
+%           \item Mention any known hybrid or hierarchical approaches that
+%                 combine tree and mesh ideas.
 %         \end{itemize}
-%   \item \textbf{State the problem:}
+%   \item \textbf{Highlight limitations of prior work:}
 %         \begin{itemize}
-%           \item Discuss limitations of using only a cluster-tree topology or
-%                 only mesh routing (e.g., fragility, overhead, latency,
-%                 energy imbalance).
-%           \item Motivate the need for a hybrid approach.
+%           \item Explain what existing solutions do not address (e.g.,
+%                 limited robustness to node failures, no analysis of join
+%                 time, no energy-aware design).
 %         \end{itemize}
-%   \item \textbf{Present the proposed solution (high level):}
+%   \item \textbf{Position the current work:}
 %         \begin{itemize}
-%           \item Introduce the idea of a hybrid cluster-tree + mesh network:
-%                 nodes organize into a cluster-tree but can also use mesh
-%                 links for robust routing.
-%         \end{itemize}
-%   \item \textbf{Summarize contributions (bullet list):}
-%         Typical items might include:
-%         \begin{itemize}
-%           \item Design of a hybrid cluster-tree + mesh topology formation
-%                 and routing protocol.
-%           \item Implementation of the protocol in a simulation platform.
-%           \item Evaluation of average join time, connectivity, packet
-%                 delivery, and energy-related behavior under node and link
-%                 losses.
-%         \end{itemize}
-%   \item \textbf{Outline of the paper:}
-%         \begin{itemize}
-%           \item Conclude with a short paragraph describing the organization
-%                 of the paper.
+%           \item Clearly state how the proposed hybrid design differs from
+%                 and/or extends prior work and what aspects it focuses on
+%                 (e.g., join time, connectivity under failures, impact of
+%                 energy depletion).
 %         \end{itemize}
 % \end{itemize}
 
 \vspace{1em}
-\section*{II.\ RELATED WORK}
-We briefly review prior works on cluster-tree and mesh routing protocols in WSNs, as well as existing hybrid approaches.
+\section{System Model and Assumptions}
+\label{sec:system-model}
 
-\subsection*{A.\ Cluster-Tree Protocols}
-
-\subsection*{B.\ Mesh Routing Protocols}
-
-\subsection*{C.\ Hybrid Approaches}
-
-\subsection*{D.\ Summary}
-
-\begin{itemize}
-  \item \textbf{Summarize relevant literature:}
-        \begin{itemize}
-          \item Describe existing cluster-tree protocols (e.g., ZigBee-like
-                approaches).
-          \item Describe mesh routing protocols in sensor/IoT networks.
-          \item Mention any known hybrid or hierarchical approaches that
-                combine tree and mesh ideas.
-        \end{itemize}
-  \item \textbf{Highlight limitations of prior work:}
-        \begin{itemize}
-          \item Explain what existing solutions do not address (e.g.,
-                limited robustness to node failures, no analysis of join
-                time, no energy-aware design).
-        \end{itemize}
-  \item \textbf{Position the current work:}
-        \begin{itemize}
-          \item Clearly state how the proposed hybrid design differs from
-                and/or extends prior work and what aspects it focuses on
-                (e.g., join time, connectivity under failures, impact of
-                energy depletion).
-        \end{itemize}
-\end{itemize}
-
-\vspace{1em}
-\section*{III.\ SYSTEM MODEL AND ASSUMPTIONS}
 We describe the system model and assumptions used in our design and evaluation.
 
-\subsection*{A.\ Network Model}
-We consider a network consisting of N sensor nodes deployed uniformly at random in a defined deployment area. The network includes one designated root node that initiates network formation, and the remaining nodes self-organize into a hybrid cluster-tree and mesh topology. Nodes communicate via a single radio channel with a fixed transmission range, and we assume static node placement throughout the simulation.
+\subsection{Network Model}
+We consider a network consisting of $N$ sensor nodes deployed uniformly at random in a defined deployment area. The network designates one root node that initiates network formation and acts as the gateway, and the remaining nodes self-organize into a hybrid cluster-tree mesh topology. Nodes communicate via a single radio channel with a dynamically selectable transmission range. We assume static node placement throughout the simulation and an ideal MAC layer with IEEE~802.15.4 characteristics operating at 2.4\,GHz (i.e., collisions are not modeled). To capture link-layer unreliability, we apply a uniform packet loss probability $p_{\text{loss}} \in [0, 0.1]$ to all transmissions, varied across experiments to evaluate protocol performance under various conditions.
 
-\subsection*{B.\ Traffic Model}
-To simulate a typical WSN use-case, we consider periodic data collection where sensor nodes report measurements to the sink. Once a node has joined the network and is in the REGISTERED, CLUSTER\_HEAD, or ROUTER state, we begin generating traffic. Each node generates periodic data packets destined for the root node (sink), simulating a many-to-one traffic pattern typical of WSNs. The packet generation interval is set to a fixed value of 0.1 seconds, resulting in a constant data rate per node.
+\subsection{Traffic Model}
+To evaluate protocol performance under, we consider a many-to-many traffic pattern where each node generates periodic data packets destined for a randomly selected node in the network. This pattern stress-tests the routing protocol more rigorously than the traditional many-to-one (sensor-to-sink) model typical of data-collection WSNs, as it exercises a wider variety of routing paths. Once a node has joined the network and is in the \texttt{REGISTERED}, \texttt{CLUSTER\_HEAD}, or \texttt{ROUTER} state, it begins generating traffic at regular intervals. The packet generation interval is dynamically configurable for each simulation run, resulting in a variable data rate per node.
 
-\subsection*{C.\ Energy Model}
-Each node is initialized with a finite energy budget and consumes energy based on its radio state. We model energy consumption for transmit (TX) and receive (RX) states, with power draw values derived from typical CC2420 radio specifications. Nodes that deplete their energy budget become permanently disabled and cease all communication.
+\subsection{Energy Model}
+Each node is initialized with a finite energy (battery capacity) and consumes energy due to radio activity in the transmit (TX) and receive (RX) states. We model a TI/Chipcon CC2420 IEEE~802.15.4 radio operating at 2.4\,GHz with data rate $R = 250$\,kbps and supply voltage $V = 3.0$\,V.
 
+\subsubsection{Initial Energy}
+Battery capacity is configured in mAh and converted to energy as
+\[
+  E_{\text{init,mJ}} = C_{\text{mAh}} \cdot V \cdot 3600.
+\]
+In our experiments, we test $C_{\text{mAh}}$ across the range 0.25--1.0\,mAh at $V = 3.0$\,V, corresponding to initial energies from $E_{\text{init}} = 2700$\,mJ (2.7\,J) to $E_{\text{init}} = 10{,}800$\,mJ (10.8\,J). These values are lower than typical sensor node batteries to accelerate simulation convergence while preserving relative energy consumption behavior. Unless otherwise stated, results use $C_{\text{mAh}} = 0.25$\,mAh.
+
+\subsubsection{Packet Size}
+Let $B(p)$ denote the over-the-air size in bytes of packet $p$. This includes PHY overhead (6\,B: preamble, SFD, PHR), MAC overhead (8\,B), a fixed 13\,B network header, and a byte count corresponding to the payload type:
+\[
+  B(p) = 6~(\text{PHY}) + 8~(\text{MAC}) + 13~(\text{header}) + \text{payload\_bytes}(p).
+\]
+
+\subsubsection{TX and RX Energy}
+For a given TX power level $\ell$, the CC2420 draws a current $I_{\text{TX}}(\ell)$, which we precompute into per-byte TX energies
+\[
+  e_{\text{TX}}(\ell) \in \{0.82,\;0.95,\;1.34,\;1.67\}~\mu\text{J/byte},
+\]
+corresponding to output power settings with $I_{\text{TX}} \in \{8.5,\;9.9,\;14.0,\;17.4\}$\,mA. We include a fixed per-packet overhead $E_{\text{start}} = 10\,\mu$J to model fixed radio energy consumption.
+
+The RX current $I_{\text{RX}} \approx 18.8$\,mA yields a per-byte receive cost of $e_{\text{RX}} \approx 1.8\,\mu$J/byte. Thus, the energy to transmit and receive a packet $p$ is
+\[
+  E_{\text{TX}}(p,\ell) = E_{\text{start}} + B(p)\,e_{\text{TX}}(\ell),
+  \qquad
+  E_{\text{RX}}(p) = B(p)\,e_{\text{RX}}.
+\]
+
+The simulator tracks energy per node in milliampere-hours. Nodes whose energy reaches zero are disabled and cease all TX and RX activity.
+
+\subsection{Scope and Simplifications}
+Since our focus is on evaluating protocol-level behavior rather than hardware-accurate energy profiling, we make the following simplifications:
 \begin{itemize}
-  \item \textbf{Network model:}
-        \begin{itemize}
-          \item Number and types of nodes (e.g., one sink/root, cluster
-                heads, regular sensor nodes).
-          \item Radio abstraction (single channel, common transmission
-                range, interference model at a high level).
-          \item Whether nodes are static or mobile (typically static).
-        \end{itemize}
-  \item \textbf{Traffic model:}
-        \begin{itemize}
-          \item What traffic is generated (e.g., periodic sensing towards
-                the sink, control only, or both).
-          \item Which nodes generate data and at what rate.
-        \end{itemize}
-  \item \textbf{Energy model:}
-        \begin{itemize}
-          \item Briefly describe the radio states (TX/RX/IDLE/SLEEP) and
-                that energy is consumed based on time spent in each state.
-          \item State that nodes start with a finite energy budget and shut
-                down when energy reaches zero.
-        \end{itemize}
-  \item \textbf{Additional assumptions and scope:}
-        \begin{itemize}
-          \item Assumptions on initial energy equality, absence of obstacles,
-                simplified propagation or MAC model, etc.
-          \item What is deliberately \emph{not} modeled (e.g., no detailed
-                interference modeling, no mobility).
-        \end{itemize}
+  \item We omit MCU processing, idle listening, and sleep-state power consumption, only TX and RX radio activity is modeled.
+  \item We assume an ideal MAC layer without collisions and link unreliability is captured via a uniform packet loss probability.
+  \item We do not model physical characteristics beyond a simple connectivity model based on transmission range and TX power level.
+  \item All nodes are static throughout each simulation run.
 \end{itemize}
+These simplifications allow us to isolate and evaluate the energy use and routing efficiency of the protocol itself, independent of other effects that would vary across hardware and deployment.
+
 
 \vspace{1em}
-\section*{IV.\ HYBRID CLUSTER-TREE + MESH NETWORK DESIGN}
+\section{Hybrid Cluster-Tree + Mesh Network Design}
+The proposed protocol features a lightweight, self-organizing \textbf{cluster-tree} that guarantees reachability in the network, and an opportunistic \textbf{mesh} that can bypass the tree when a route exists in the N-hop neighbor table. The backbone provides a structured hierarchy that ensures reachability; while the mesh opportunistically reduces hop count, latency, and energy when local connectivity permits.
 
-This section describes the proposed protocol in detail.
+\subsection{Design Overview}
+\textbf{Cluster-Tree:} Nodes form clusters, each managed by a Cluster Head (CH) with a unique
+\texttt{NET\_ID} (Network ID). Each cluster member (CM) receives a unique \texttt{NODE\_ID} within that \texttt{NET\_ID}.
+CHs connect upward toward the Root Node (RN), which allocates \texttt{NET\_IDs} to CHs. This forms a tree of
+clusters that can route traffic between any two clusters using hierarchical parent/child relationships.
 
-\subsection {Overall Architecture}
-We propose a hybrid cluster-tree mesh topology where nodes are organized into a hierarchical cluster-tree structure, but they can also use mesh links to route data between clusters. This hybrid approach leverages the strengths of both cluster-tree and mesh routing.
+\textbf{Mesh:} Every node maintains an N-hop neighbor table populated by HEARTBEAT overhearing and neighbor table sharing. If a destination (or its parent CH) is reachable via the neighbor table, packets are forwarded directly (peer-to-peer) instead of traversing the tree (except for some packet types which must traverse the tree to build the hierarchy).
 
-Our architecture includes the following Node types, CLUSTER_MEMBER, CLUSTER_HEAD, ROUTER, GATEWAY, and ROOT_NODE
+\textbf{Dynamic Addressing:} Every dynamic address is the combination of a \texttt{NET\_ID} and \texttt{NODE\_ID}. A dynamic address (\texttt{NET\_ID.NODE\_ID}) resolves to a single node at any moment, but a single physical node may be addressed by multiple dynamic addresses (e.g., acting as a CM in one cluster while simultaneously acting as a CH for another). A globally unique 8 byte \texttt{UID} (EUI-64) is used to validate identity across role/address changes.
 
-\begin{itemize}
-  \item Describe the roles of different nodes:
-        \begin{itemize}
-          \item Sink/root node.
-          \item Cluster heads (parents).
-          \item Regular/leaf nodes.
-          \item Local neighborhood and mesh neighbors
-        \end{itemize}
-  \item Explain how the cluster-tree and mesh components coexist:
-        \begin{itemize}
-          \item Cluster-tree provides hierarchical structure and basic
-                connectivity.
-          \item Discuss  the formation of cluster tree, the role of routers,  cluster overlaps
-          \item Mesh  provides improved robustness in the local neighborhood.
-        \end{itemize}
-
-\end{itemize}
-
-A  high-level figure illustrating the architecture (tree backbone with some cross-layer mesh links) if given in Figure \ref{fig:wsn_arch}.
+A high-level figure illustrating the architecture (tree backbone with cross-layer mesh links) is given in Figure~\ref{fig:wsn_arch}.
 
 \begin{figure}[t]
   \centering
@@ -228,579 +188,205 @@ A  high-level figure illustrating the architecture (tree backbone with some cros
   \label{fig:wsn_arch}
 \end{figure}
 
-\subsection{Energy Consumption Model}
-Each node is equipped with a CC2420-like radio transceiver. We model the
-energy consumption of the radio using four main states: transmit (TX),
-receive (RX), idle listening (IDLE), and sleep (SLEEP). Each state $s$
-is associated with a constant power draw $P_s$, derived from the
-typical CC2420 current consumption and supply voltage.
+\subsection{Roles, Capabilities, and Role Transitions}
+The proposed design separates what a node is doing now (\texttt{attributes}) from what it can do (\texttt{capabilities}).
+Broadcasting these fields enables distributed, local decisions without centralized orchestration.
 
-Let $E_i(t)$ denote the remaining energy of node $i$ at time $t$. Over a
-time interval $[t, t+\Delta t]$, the energy is updated according to
-
-\begin{equation}
-  E_i(t + \Delta t) = E_i(t) -
-  \sum_{s \in \{\mathrm{TX}, \mathrm{RX}, \mathrm{I}, \mathrm{S}\}}
-  P_s \, T_{i,s}(t, t+\Delta t).
-  \label{eq:energy_update}
-\end{equation}
-
-where $T_{i,s}(t,t+\Delta t)$ is the time spent by node $i$ in state
-$s$ during $[t, t+\Delta t]$.
-
-Your simulator tracks the radio state ( you have only implemented RX and TX states I believe. Also mention the other radio states of
-each node and discuss how your simulator integrates the corresponding energy consumption over
-time.
-
-\subsection*{B.\ Network Formation Procedure}
-
-Describe, step by step, how the network forms from an initial empty state:
-
+\textbf{Roles:}
 \begin{itemize}
-  \item \textbf{Initial conditions:}
-        \begin{itemize}
-          \item Describe how the root starts the network and begins  advertising its presence.
-        \end{itemize}
-  \item \textbf{Discovery and joining:}
-        \begin{itemize}
-          \item How new nodes detect neighbors or beacons.
-          \item How a node chooses a parent or cluster head (e.g., based on
-                signal strength, hop count, or node ID).
-          \item The message exchange for joining .
-        \end{itemize}
-  \item \textbf{Cluster formation rules:}
-        \begin{itemize}
-          \item Conditions for becoming a cluster head versus joining as a
-                child.
-          \item Any limits on the number of children per cluster head.
-        \end{itemize}
-  \item \textbf{Timing and re-tries:}
-        \begin{itemize}
-          \item When and how often nodes attempt to join or re-join if
-                the first attempt fails.
-        \end{itemize}
+  \item \textbf{CM:} Ordinary member of a cluster; may also act as CH/R/RN/GW if capable.
+  \item \textbf{CH:} Manages one cluster address space; assigns \texttt{NODE\_IDs} and maintains a Member Table.
+  \item \textbf{R:} Bridges clusters when topology suggests a dedicated bridge is preferable to redundant CH chains.
+  \item \textbf{RN:} Allocates new \texttt{NET\_IDs} and acts as a CH for its local cluster (\texttt{1.254} reserved).
+  \item \textbf{GW:} Provides external network connectivity; may coincide with RN or be separate.
 \end{itemize}
 
-\subsection*{C.\ Routing Strategy}
+\textbf{Promotion triggers:}
+\begin{enumerate}
+  \item \textbf{CH promotion (CM $\rightarrow$ CH):} If an unregistered node attempts to join through a CM and no reachable CH can serve it, the CM requests a \texttt{NET\_ID} allocation from the RN (\texttt{NETID\_REQ}/\texttt{NETID\_RESP}) and becomes a CH upon success.
+  \item \textbf{Router formation (CM/CH $\rightarrow$ R):} If a node primarily relays between clusters (e.g., it sits between two CHs and has no local members), it may assume an R role to reduce unnecessary cluster depth.
+  \item \textbf{CH demotion (CH $\rightarrow$ R/CM):} If a CH becomes redundant (no members; only bridging), it may demote to R or CM to simplify the backbone and reduce maintenance overhead.
+\end{enumerate}
 
-This subsection explains how packets are forwarded once the network is
-formed:
+\subsection{Cluster Formation and Join Workflow}
+The protocol supports cold-start: nodes can discover a network, join it, and receive an address lease
+without pre-configuration.
 
-\begin{itemize}
-  \item \textbf{Intra-cluster routing:}
-        \begin{itemize}
-          \item How children send data to their cluster head and how the
-                cluster head forwards data within the cluster (if needed).
-        \end{itemize}
-  \item \textbf{Inter-cluster/global routing:}
-        \begin{itemize}
-          \item Default tree-based paths towards the sink (parent-to-parent).
-          \item When and how mesh links are used .
-        \end{itemize}
-  \item \textbf{Route selection:}
-        \begin{itemize}
-          \item The metric used to choose routes (e.g., hop count, link
-                quality, or combined metrics).
-          \item What routing information each node stores (parent, cluster
-                ID, mesh neighbors, distance to sink, etc.).
-        \end{itemize}
-\end{itemize}
+\textbf{Discovery:} An unregistered node broadcasts \texttt{PROBE} messages. Responders send \texttt{HEARTBEAT} messages describing role flags, capabilities, and a \texttt{path\_cost} (to root). The joining node populates its neighbor table with the received \texttt{HEARTBEAT} messages and selects a candidate CH (or CM that can promote) using lowest local (distance cost) cost and network cost (path cost).
 
-\subsection*{D.\ Self-Organization and Maintenance}
+\textbf{Join (CH available):}
+\begin{enumerate}
+  \item Node sends \texttt{JOIN\_REQ} (unicast) to selected CH, including \texttt{UID} and \texttt{capabilities}.
+  \item CH assigns a \texttt{NODE\_ID}, creates a Member Table entry, and responds with \texttt{JOIN\_ACK} (broadcast) containing \texttt{targetUid}, assigned \texttt{clusterAddr}, and address validity time.
+  \item New CM confirms via \texttt{ACK} (matching \texttt{seqNo}); CH clears renew state.
+\end{enumerate}
 
-Describe how the network adapts over time:
+\textbf{Join (promotion required):} If no CH is reachable directly, the CM triggers promotion: it requests a \texttt{NET\_ID} from the RN, becomes CH, and then completes the join.
+
+\subsection{Routing Rules}
+Every forwarded packet carries a \texttt{DST} and a \texttt{NH} (Next Hop). Forwarders \textit{rewrite NH} based on local tables, while preserving the \texttt{DST}. This keeps the end-to-end destination stable while allowing routing rules to be applied hop-by-hop.
 
 \begin{itemize}
-  \item \textbf{Handling node failures:}
-        \begin{itemize}
-          \item How children detect that their parent or cluster head has
-                failed (e.g., missed heartbeats or timeouts).
-          \item How nodes attempt to re-join the network or select a new
-                parent.
-        \end{itemize}
-  \item \textbf{Handling changing link quality:}
-        \begin{itemize}
-          \item How link quality is monitored and how bad links lead to
-                route changes or parent switches.
-        \end{itemize}
-  \item \textbf{Mesh adaptation:}
-        \begin{itemize}
-          \item Rules for creating and removing mesh links between nodes.
-          \item Any periodic neighbor discovery or link probing.
-          \item The role of routers to provide communication between clusters
-        \end{itemize}
-  \item \textbf{Energy-related aspects (if applicable):}
-        \begin{itemize}
-          \item Any mechanisms to reduce energy usage (e.g., sleep cycles,
-                rotation of cluster-head roles).
-          \item Adaptive Tx Power to reduce energy consumption
-          \item Recovery from node failures due to nodes running out of energy -- any proactive algorithmic solution you can offer
-        \end{itemize}
+  \item \textbf{Mesh:} For data packets, if \texttt{DST} or its CH (\texttt{NET\_ID.254}) exists in the Neighbor Table, forward to the recorded next hop. Control packets (\texttt{NETID\_REQ}, \texttt{NETID\_RESP}, \texttt{JOIN\_ACK}, \texttt{ACK}) bypass mesh routing to preserve the tree hierarchy.
+  \item \textbf{Router:} A Router (R) bridges clusters by forwarding packets destined for its downstream network, or packets arriving from its parent, to its downstream CH.
+  \item \textbf{Tree:} CHs deliver locally if \texttt{target\_net == my\_net}, or forward via the Child Net Table for child networks. If no route is found, packets are forwarded to the parent.
 \end{itemize}
+
+\textbf{Rationale:} Mesh routing reduces hop count and energy cost in dense deployments by exploiting local connectivity. The tree provides guaranteed reachability along a known hierarchy: ordinary nodes need only a parent entry and Neighbor Table, while only CHs need to maintain Member and Child Net Tables.
+
+\subsection{Self-Healing Protocol}
+The protocol treats topology as dynamic, continuously expiring stale state to adapt to node failures and mobility.
+
+\textbf{Neighbor Table:} Updated on any receive (including overheard packets). Entries age out after a configurable window to prevent routing through dead nodes.
+
+\textbf{Member Table (CH):} Uses address leases. If a CM fails to send a \texttt{HEARTBEAT} before expiry, the CH removes the entry and frees the \texttt{NODE\_ID}.
+
+\textbf{Child Net Table (CH):} Populated by observing \texttt{NETID\_REQ}/\texttt{NETID\_RESP} traversals. Entries transition \texttt{PENDING} $\rightarrow$ \texttt{VALID} on promotion, becoming \texttt{STALE} if unheard. Stale entries are purged, forcing packets to route upward until a valid path is re-learned.
+
+\textbf{Failure handling examples:}
+\begin{itemize}
+  \item \textbf{Lost parent CH:} CM times out neighbor/parent; re-enters discovery (\texttt{PROBE}) and rejoins.
+  \item \textbf{Lost CH with active members:} Members simultaneously lose parent; reattach to alternate CHs or trigger local promotions, rebuilding clusters outward from surviving nodes.
+  \item \textbf{Broken inter-cluster bridge:} Tree routing naturally falls back upward;
+\end{itemize}
+
+\subsection{Energy and Resource Usage}
+\textbf{Memory:} Ordinary nodes store only the Neighbor Table, bounded by $N$ entries at $N$ hops. CHs additionally maintain the Member Table (bounded by cluster size) and Child Net Table (bounded by child networks).
+
+\textbf{Energy:} Neighbor learning via passive overhearing of \texttt{HEARTBEAT} messages requires no TX energy. Nodes dynamically adjust transmission power based on distance to the next hop, reducing energy consumption and extending network lifetime.
+
+\textbf{Hop Count:} Mesh forwarding reduces hop count in dense deployments by enabling horizontal shortcuts. In sparse deployments, tree routing guarantees reachability via hierarchical forwarding. Without mesh links, packets must traverse upward before descending to the destination cluster.
+
 
 \vspace{1em}
-\section*{V.\ SIMULATION PLATFORM AND EXPERIMENTAL SETUP}
+\section{Simulation and Experiments}
+We implement the hybrid protocol in WSNLAB, a discrete-event Python simulator. The network, traffic, and energy models follow Section~\ref{sec:system-model}. Unless otherwise noted, experiments use the default parameters in Table~\ref{tab:params}.
 
-\subsection*{A.\ Simulation Platform}
+\begin{table}[t]
+  \centering
+  \caption{Default Simulation Parameters}
+  \label{tab:params}
+  \begin{tabular}{ll}
+    \hline
+    \textbf{Parameter}                          & \textbf{Value}      \\
+    \hline
+    Network size ($N$)                          & 100 nodes           \\
+    Deployment area                             & $100 \times 100$\,m \\
+    Initial energy ($E_0$)                      & 0.25\,mAh           \\
+    Traffic interval ($T_s$)                    & 1.0\,s              \\
+    Packet loss probability ($p_{\text{loss}}$) & 0.01                \\
+    \hline
+  \end{tabular}
+\end{table}
 
-Describe where and how the protocol is implemented:
-
+\subsection{Metrics}
+We evaluate the protocol using the following metrics:
 \begin{itemize}
-  \item Briefly explain the main modules:
-        \begin{itemize}
-          \item Node and radio abstraction.
-          \item Topology and neighbor management.
-          \item Protocol logic (formation, routing, maintenance).
-          \item Logging and statistics collection.
-        \end{itemize}
-  \item Note any simplifications:
-
+  \item \textbf{Join time:} Time from node power-on until successful registration with a CH.
+  \item \textbf{Connectivity:} Fraction of nodes with a valid route to the sink over time.
+  \item \textbf{Packet delivery ratio (PDR):} Fraction of generated packets successfully delivered.
+  \item \textbf{Node lifetime:} Time until a node depletes its energy budget. Nodes with $E_i(t) \le 0$ are permanently disabled.
+  \item \textbf{Network lifetime:} Time until connectivity drops below 80\%, capturing when the network is no longer operationally useful.
 \end{itemize}
 
-\subsection*{B.\ Scenario Configuration}
-
-This subsection defines the experimental scenarios in detail:
-
-\begin{itemize}
-  \item \textbf{Topology:}
-        \begin{itemize}
-          \item Number of nodes (e.g., 25, 50, 100, 200).
-          \item Deployment area size (e.g., $100\,\mathrm{m} \times 100\,\mathrm{m}$).
-          \item Node placement (random uniform, grid, etc.).
-        \end{itemize}
-  \item \textbf{Radio parameters:}
-        \begin{itemize}
-          \item Communication range or path-loss model. Simplify the discussion here , radio access is based on the distance between nodes.
-          \item Assumptions about interference ( we did not have any interference,  what else).
-        \end{itemize}
-  \item \textbf{Traffic configuration:}
-        \begin{itemize}
-          \item Packet generation rate (low/medium/high traffic).
-          \item Packet size and destinations (root or any destination).
-        \end{itemize}
-  \item \textbf{Energy configuration:}
-        \begin{itemize}
-          \item Initial energy per node.
-          \item Power levels used in the energy model (TX/RX/IDLE/SLEEP). [You are spending energy only when you receive and Transmit.  Ideally you should have 4 states at least]
-        \end{itemize}
-  \item \textbf{Failure scenarios (if studied):}
-        \begin{itemize}
-          \item Patterns and percentages of node failures (random vs targeted).
-          \item Link loss or packet loss probabilities, the impact on the network formation and run.
-        \end{itemize}
-\end{itemize}
-
-\subsection*{C.\ Metrics}
-
-Define clearly what do you  measure and how: Add a plot where it is necessary to show experimental results.
-
-\begin{itemize}
-  \item \textbf{Join-related metrics:}
-        \begin{itemize}
-          \item Per-node join time and average join time.
-          \item Join success rate (fraction of nodes that join within a time
-                limit).
-        \end{itemize}
-  \item \textbf{Connectivity metrics:}
-        \begin{itemize}
-          \item Fraction of nodes with a valid route to the sink.
-          \item Average hop count from connected nodes to the sink.
-        \end{itemize}
-  \item \textbf{Routing performance:}
-        \begin{itemize}
-          \item Packet delivery ratio (PDR) under various link and node conditions.
-          \item End-to-end delay (mean, possibly percentiles) under various link and node conditions.
-        \end{itemize}
-  \item \textbf{Energy metrics:}
-        At the beginning of each experiment, all nodes are initialized with a
-        finite energy budget $E_i(0) = E_0$. When the remaining energy of node
-        $i$ reaches zero or becomes negative, i.e., $E_i(t) \le 0$, the node is
-        permanently disabled. A disabled node turns off its radio and ceases
-        all communication and protocol participation. As a result, energy
-        depletion induces node losses that may fragment the topology and
-        degrade connectivity.
-
-        In addition to per-node energy, the simulator records the cumulative
-        time that each node spends in TX, RX, IDLE, and SLEEP. This will enable a
-        fine-grained analysis of the energy cost incurred by different network
-        roles (e.g., cluster heads, mesh forwarders, routers, and leaf nodes).
-
-        \begin{itemize}
-          \item Average remaining energy over time.
-          \item Node lifetime (time until individual nodes die).
-          \item Network lifetime (time until a threshold fraction of nodes
-                is no longer connected).
-        \end{itemize}
-\end{itemize}
-\subsection*{D.\ Experiment Design}
-
-Finally, you should explain how experiments are organized:
+\subsection{Experiments}
+We organize experiments into three categories: (1) scalability, varying network size from 25--300 nodes; (2) reliability, varying packet loss probability $p_{\text{loss}}$; and (3) energy, varying initial energy $E_0$ and traffic interval $T_s$. We also compare tree-only routing against the hybrid tree+mesh configuration.
 
 \begin{figure}
   \centering
-  % Replace with your actual file
-  \includegraphics[width=0.9\columnwidth]{fig1.png}
-  \caption{Average join time versus network size.}
+  \includegraphics[width=0.9\columnwidth]{figures/average_join_time_vs_network_size.png}
+  \caption{Average join time versus network size. Parameters: $E_0 = 0.25$\,mAh, $T_s = 1$\,s, $p_{\text{loss}} = 0.01$.}
   \label{fig:jointime}
 \end{figure}
 
+\subsubsection{Network Lifetime vs. Initial Energy}
+We vary $E_0$ while holding network size, placement, and traffic constant. Network lifetime is defined as the time until connectivity drops below 80\%.
 
-\begin{figure}
+\begin{figure}[t]
   \centering
-  % Replace with your actual file
-  \includegraphics[width=0.9\columnwidth]{fig1.png}
-  \caption{Nodes killed versus number of nodes disconnected}
-  \label{fig:nodes_killed}
+  \includegraphics[width=0.9\columnwidth]{figures/network_lifetime_vs_e0.png}
+  \caption{Network lifetime as a function of the initial energy budget $E_0$ per node, for different traffic intervals ($T_s = 0.1$\,s and $T_s = 1.0$\,s). Network lifetime is defined as the time until fewer than $80\%$ of the nodes remain connected to the sink. Parameters: $p_{\text{loss}} = 0.01$.}
+  \label{fig:lifetime_vs_energy}
+\end{figure}
+
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.9\columnwidth]{figures/packet_loss_delivery.png}
+  \caption{Cumulative packets delivered versus packets sent under different packet loss probabilities ($p_{\text{loss}} = 0.0$, $0.001$, $0.01$, $0.1$). Higher loss probabilities result in greater deviation between sent and delivered packets. Parameters: $E_0 = 0.25$\,mAh, $T_s = 1$\,s.}
+  \label{fig:packetLossRateIMpact}
+\end{figure}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.9\columnwidth]{figures/tree_vs_mesh_lifetime.png}
+  \caption{Comparison of network lifetime between tree-only and tree+mesh (hybrid) routing as a function of initial energy $E_0$. Network lifetime is defined as the time until fewer than $80\%$ of the nodes remain connected to the sink. Parameters: $T_s = 1$\,s, $p_{\text{loss}} = 0.01$.}
+  \label{fig:energy_comparison}
 \end{figure}
 
 
 
+\subsubsection{Role-Based Energy Depletion}
+In the second experiment set, we analyze the energy consumption of different node roles in the hybrid cluster-tree and mesh topology. Cluster heads and mesh forwarders are expected to relay a larger fraction of the traffic and to transmit more control packets than leaf nodes. To quantify this effect, we log for each node its role, time of death (if any), and total time spent in each radio state. We then compare:
 \begin{itemize}
-  \item \textbf{Baseline experiments:}
-        \begin{itemize}
-          \item Vary network size (e.g., 25--200 nodes) under normal
-                conditions to study join time, routing performance, and basic
-                scalability.
-        \end{itemize}
-  \item \textbf{Failure experiments:}
-        \begin{itemize}
-          \item Introduce node failures (random and/or targeted) and measure
-                the effect on connectivity, routing, and join/re-join
-                behavior.
-          \item {Simulate a scenario where N nodes are killed after the simulation converged to a topology and nodes stay off for some time specified. Nodes are reactivated after being off for some time. Discuss topology changes after the nodes are deactivated and reactivated. }
-          \item Introduce packet/link loss and analyze PDR and delay.
-        \end{itemize}
-  \item \textbf{Energy experiments:}
-        \begin{itemize}
-          \item Vary initial energy budgets and traffic loads to study the
-                trade-off between throughput and network lifetime.
-        \end{itemize}
-
-  \item \textbf{Energy-Aware Experiment Design}
-        We design several experiments to characterize the impact of energy
-        consumption on network connectivity and performance.
-
-        \subsubsection{Network Lifetime vs. Initial Energy}
-        In the first experiment set, we investigate how the initial energy
-        budget affects the overall network lifetime. The number of nodes, node
-        placement, and traffic pattern are kept constant, while the initial
-        energy $E_0$ is varied across multiple scenarios (e.g., low, medium,
-        and high battery capacity). For each scenario, we record:
-        \begin{itemize}
-          \item the time of the first node death,
-          \item the time at which $10\%$, $50\%$, and $90\%$ of the nodes have
-                depleted their energy, and
-          \item the time at which the fraction of nodes with a valid route to
-                the sink falls below a given connectivity threshold (e.g.,
-                $80\%$).
-        \end{itemize}
-        We refer to the latter as the \emph{network lifetime}, since it
-        captures the time interval during which the network remains
-        operational from the application point of view.
-
-        \begin{figure}[t]
-          \centering
-          \begin{tikzpicture}
-            \begin{axis}[
-                width=0.9\columnwidth,
-                xlabel={Initial energy $E_0$ [J]},
-                ylabel={Network lifetime [s]},
-                xmin=0, xmax=3.5,
-                ymin=0, ymax=2500,
-                grid=both,
-                legend style={font=\footnotesize, at={(0.5,1.02)},anchor=south,legend columns=-1},
-                tick label style={font=\scriptsize},
-                label style={font=\scriptsize}
-              ]
-              % Low traffic
-              \addplot[smooth, mark=o] coordinates {
-                  (0.5,400) (1.0,800) (2.0,1500) (3.0,2100)
-                };
-              \addlegendentry{Low traffic}
-
-              % High traffic
-              \addplot[smooth, mark=square*] coordinates {
-                  (0.5,200) (1.0,500) (2.0,1000) (3.0,1500)
-                };
-              \addlegendentry{High traffic}
-            \end{axis}
-          \end{tikzpicture}
-          \caption{Network lifetime as a function of the initial energy budget $E_0$
-            per node, for different traffic loads. Network lifetime is defined as the
-            time until fewer than $80\%$ of the nodes remain connected to the sink.}
-          \label{fig:lifetime_vs_energy}
-        \end{figure}
-
-
-        \begin{figure}[t]
-          \centering
-          \begin{tikzpicture}
-            \begin{axis}[
-                width=0.9\columnwidth,
-                xlabel={Packets Sent [packets]},
-                ylabel={Packets Delivered [packets]},
-                xmin=0, xmax=2500,
-                ymin=0, ymax=2500,
-                grid=both,
-                legend style={font=\footnotesize, at={(0.5,1.02)},anchor=south,legend columns=-1},
-                tick label style={font=\scriptsize},
-                label style={font=\scriptsize}
-              ]
-              \addplot[smooth, mark=o] coordinates {
-                  (100,100) (200,200) (400,400) (1000,1000) (2000,2000)
-                };
-              \addlegendentry{Packet Loss =0}
-
-              \addplot[smooth, mark=*]
-              coordinates {
-                  (100,90) (200,150) (400,300) (1000,800) (2000,1500)
-                };            \addlegendentry{Packet Loss =0.001}
-
-
-              \addplot[smooth, mark=+]
-              coordinates {
-                  (100,90) (200,150) (400,300) (1000,800) (2000,1100)
-                };
-              \addlegendentry{Packet Loss =0.0001}
-
-            \end{axis}
-          \end{tikzpicture}
-          \caption{Network lifetime as a function of the initial energy budget $E_0$
-            per node, for different traffic loads. Network lifetime is defined as the
-            time until fewer than $80\%$ of the nodes remain connected to the sink.}
-          \label{fig:packetLossRateIMpact}
-        \end{figure}
-
-        \begin{figure}[t]
-          \centering
-          \begin{tikzpicture}
-            \begin{axis}[
-                width=0.9\columnwidth,
-                xlabel={Time $E_0$ [s]},
-                ylabel={Energy [J]},
-                xmin=0, xmax=3.5,
-                ymin=0, ymax=2500,
-                grid=both,
-                legend style={font=\footnotesize, at={(0.5,1.02)},anchor=south,legend columns=-1},
-                tick label style={font=\scriptsize},
-                label style={font=\scriptsize}
-              ]
-              % Low traffic
-              \addplot[smooth, mark=o] coordinates {
-                  (0.5,2000) (1.0,1300) (2.0,1100) (3.0,500)
-                };
-              \addlegendentry{CT+Mesh}
-
-              % High traffic
-              \addplot[smooth, mark=square*] coordinates {
-                  (0.5,2000) (1.0,1200) (2.0,1000) (3.0,300)
-                };
-              \addlegendentry{CT Only}
-            \end{axis}
-          \end{tikzpicture}
-          \caption{Network lifetime as a function of the initial energy budget $E_0$
-            per node, for different traffic loads. Network lifetime is defined as the
-            time until fewer than $80\%$ of the nodes remain connected to the sink.}
-          \label{fig:energy_comparison}
-        \end{figure}
-
-
-
-        \begin{figure}[t]
-          \centering
-          \begin{tikzpicture}
-            \begin{axis}[
-                width=0.9\columnwidth,
-                ybar,
-                bar width=6pt,
-                xlabel={Initial energy $E_0$ [J]},
-                ylabel={Time [s]},
-                symbolic x coords={0.5,1.0,2.0,3.0},
-                xtick=data,
-                ymin=0,
-                grid=both,
-                legend style={font=\footnotesize, at={(0.5,1.02)},anchor=south,legend columns=3},
-                tick label style={font=\scriptsize},
-                label style={font=\scriptsize}
-              ]
-              % First node death
-              \addplot coordinates {(0.5,150) (1.0,300) (2.0,600) (3.0,900)};
-              \addlegendentry{First node death}
-
-              % 50% nodes dead
-              \addplot coordinates {(0.5,300) (1.0,600) (2.0,1200) (3.0,1800)};
-              \addlegendentry{50\% nodes dead}
-
-              % Connectivity < 80% (network lifetime)
-              \addplot coordinates {(0.5,250) (1.0,550) (2.0,1100) (3.0,1600)};
-              \addlegendentry{$<80\%$ connected}
-            \end{axis}
-          \end{tikzpicture}
-          \caption{Impact of the initial energy budget $E_0$ on different lifetime
-            metrics: time of first node death, time at which 50\% of the nodes are
-            dead, and time at which fewer than 80\% of the nodes remain connected
-            to the sink.}
-          \label{fig:lifetime_metrics_vs_energy}
-        \end{figure}
-
-        \subsubsection{Role-Based Energy Depletion}
-        In the second experiment set, we analyze the energy consumption of
-        different node roles in the hybrid cluster-tree and mesh topology.
-        Cluster heads and mesh forwarders are expected to relay a larger
-        fraction of the traffic and to transmit more control packets than leaf
-        nodes. To quantify this effect, we log for each node its role, time of
-        death (if any), and total time spent in each radio state. We then
-        compare:
-        \begin{itemize}
-          \item the average lifetime of cluster heads and mesh forwarders
-                against that of leaf nodes, and
-          \item the average energy breakdown (TX/RX/IDLE/SLEEP) per role.
-        \end{itemize}
-        This experiment highlights whether critical nodes (e.g., cluster heads)
-        tend to deplete their batteries prematurely and how their failure
-        impacts the remaining topology.
-
-        \subsubsection{Impact of Traffic Load on Energy Consumption}
-        In the third experiment set, we study the trade-off between traffic
-        load and network lifetime. The topology and initial energy $E_0$ are
-        kept fixed, while the application data rate is varied (e.g., low,
-        medium, and high packet generation rates per node). For each traffic
-        level, we monitor:
-        \begin{itemize}
-          \item the average remaining energy over time,
-          \item the number and fraction of alive nodes,
-          \item the number and fraction of nodes with a route to the sink, and
-          \item the packet delivery ratio (PDR) computed over sliding time
-                windows.
-        \end{itemize}
-        By comparing these metrics across traffic configurations, we evaluate
-        how increased load accelerates energy depletion and reduces the time
-        for which the network can sustain a target connectivity or reliability
-        level.
-
-        \subsubsection{Energy-Aware vs. Baseline Configuration (Optional)}
-        If applicable, we also consider an energy-aware configuration of the
-        hybrid protocol, in which the cluster-head role is periodically
-        rotated or the maximum number of children per cluster head is limited.
-        We compare this configuration against a baseline with fixed cluster
-        heads. The comparison focuses on node lifetime distributions, the
-        fraction of prematurely dead cluster heads, and the resulting network
-        lifetime.
-
-  \item \textbf{Repetitions and statistics:}
-        \begin{itemize}
-          \item Indicate how many runs are performed per scenario (e.g., 10
-                or 20 runs with different random seeds).
-          \item Explain how averages and confidence intervals are computed.
-        \end{itemize}
+  \item the average lifetime of cluster heads and mesh forwarders against that of leaf nodes, and
+  \item the average energy breakdown (TX/RX/IDLE/SLEEP) per role.
 \end{itemize}
-\subsection{Discussion}
+This experiment highlights whether critical nodes (e.g., cluster heads and mesh forwarders) tend to deplete their batteries prematurely and how their failure impacts the remaining topology.
 
-% overall robustness and trade-offs
-\subsection{Impact of Energy Consumption on Network Connectivity}
-This section presents the impact of energy consumption and
-energy-driven node failures on the hybrid cluster-tree and mesh
-network.
+\subsubsection{Impact of Traffic Load on Energy Consumption}
+In the third experiment set, we study the trade-off between traffic load and network lifetime. The topology and initial energy $E_0$ are kept fixed, while the application data rate is varied (e.g., low, medium, and high packet generation rates per node). For each traffic level, we monitor:
+\begin{itemize}
+  \item the average remaining energy over time,
+  \item the number and fraction of alive nodes,
+  \item the number and fraction of nodes with a route to the sink, and
+  \item the packet delivery ratio (PDR) computed over sliding time windows.
+\end{itemize}
+By comparing these metrics across traffic configurations, we evaluate how increased load accelerates energy depletion and reduces the time for which the network can sustain a target connectivity or reliability level.
 
-\subsubsection{Evolution of Alive and Connected Nodes}
-Fig.\ref{fig:connectivity_vs_time_traffic} shows the fraction of alive
-nodes and the fraction of nodes that maintain a valid route to the
-sink as a function of time, for different initial energy budgets
-$E_0$. In all cases, the fraction of alive nodes decreases gradually as
-nodes deplete their batteries. However, the fraction of connected
-nodes typically decreases more abruptly when critical nodes (e.g.,
-cluster heads or mesh forwarders) fail. For small $E_0$, the network
-rapidly loses connectivity after the first few cluster-head failures.
-Larger energy budgets postpone these critical failures and increase
-the time interval during which more than $80\%$ of the nodes remain
-connected.
+\subsection{Results}
 
-\subsubsection{Node Lifetime Distribution and Role Effects}
-Fig.~\ref{fig:lifetime_cdf} depicts `` Cluster heads exhibit significantly shorter lifetimes,
-confirming that their higher forwarding and control responsibilities
-translate into faster energy depletion. As a result, the first network
-partitions are typically triggered by the death of cluster heads.
-Leaf nodes, in contrast, often retain a substantial amount of energy
-when the network as a whole is already disconnected from the sink.
-This imbalance suggests that energy-aware role assignment or rotation
-mechanisms could substantially extend network lifetime.
+\subsubsection{Scalability: Join Time}
+Fig.~\ref{fig:jointime} shows the average join time as a function of network size. Join time increases from approximately 7.2\,s at 25 nodes to 13\,s at 300 nodes---a sub-linear increase relative to the 12$\times$ growth in network size. Interestingly, a plateau occurs between 150--250 nodes, where denser deployments provide more CH candidates nearby, reducing discovery latency. The increase at 300 nodes suggests control packet congestion during formation in very dense networks.
+
+\subsubsection{Network Lifetime vs. Initial Energy}
+Fig.~\ref{fig:lifetime_vs_energy} confirms a linear relationship between initial energy $E_0$ and network lifetime. At $T_s = 1$\,s, lifetime increases from 650\,s to 2850\,s as $E_0$ grows from 0.1 to 0.5\,mAh. High traffic ($T_s = 0.1$\,s) reduces lifetime by approximately 45\% compared to low traffic. The widening gap at higher energy levels indicates that traffic load becomes the dominant factor when energy budgets are less constrained.
+
+\subsubsection{Reliability Under Packet Loss}
+Fig.~\ref{fig:packetLossRateIMpact} shows cumulative packet delivery under varying loss probabilities. The protocol maintains good delivery up to $p_{\text{loss}} = 0.01$, achieving approximately 75\% cumulative PDR. At $p_{\text{loss}} = 0.1$, cumulative loss reaches 38\%, as multi-hop paths compound per-hop losses. The near-linear curves indicate steady-state behavior without catastrophic failure, demonstrating robustness to link unreliability.
+
+\subsubsection{Tree vs. Mesh: Network Lifetime}
+Fig.~\ref{fig:energy_comparison} compares network lifetime between tree-only and hybrid tree+mesh routing. The hybrid approach consistently outperforms tree-only across all energy levels: 24\% improvement at $E_0 = 0.1$\,mAh (620\,s vs. 500\,s), 14\% at 0.25\,mAh (1370\,s vs. 1200\,s), and 12.5\% at 0.5\,mAh (2700\,s vs. 2400\,s). The benefit is most pronounced at lower energy budgets, confirming that mesh shortcuts reduce hop count and energy per packet.
+
+\subsubsection{Tree vs. Mesh: Packet Delivery Ratio}
+Fig.~\ref{fig:pdr_over_time} shows PDR over time for both routing modes. The hybrid approach achieves a peak PDR of 95\% compared to 93\% for tree-only. More importantly, tree-only PDR drops sharply to 84\% at approximately 1000\,s as CH failures disrupt routes, while tree+mesh maintains 88--89\% PDR until 3700\,s. The sustained 4\% PDR advantage demonstrates that mesh links provide alternative paths when tree links fail, improving resilience.
 
 \begin{figure}[t]
   \centering
-  % Replace with your actual file
-  \includegraphics[width=0.9\columnwidth]{fig1.png}
-  \caption{Packet delivery ratio (PDR) over
-    time.}
+  \includegraphics[width=0.9\columnwidth]{figures/tree_vs_mesh_pdr.png}
+  \caption{Packet delivery ratio (PDR) over time comparing tree-only and tree+mesh routing. Parameters: $E_0 = 0.25$\,mAh, $T_s = 1$\,s, $p_{\text{loss}} = 0.01$.}
   \label{fig:pdr_over_time}
 \end{figure}
 
-
-\subsubsection{Performance Degradation Due to Energy Depletion}
-Fig.~\ref{fig:pdr_over_time} shows the packet delivery ratio (PDR) over
-time. We observe that PDR remains close to its nominal value while the
-majority of nodes are both alive and connected. Once a sufficient
-number of cluster heads and relay nodes have died, PDR drops sharply
-even though a non-negligible fraction of nodes are still powered.
-This indicates that from the application perspective, the effective
-end of the network occurs before the physical exhaustion of all
-nodes, reinforcing the importance of connectivity-based lifetime
-metrics.
-
+\subsubsection{Impact of Traffic Load}
+Fig.~\ref{fig:connectivity_vs_time_traffic} shows connectivity over time for different traffic intervals. Network lifetime (80\% connectivity threshold) varies dramatically: approximately 800\,s for $T_s = 0.1$\,s, 1000\,s for $T_s = 1$\,s, 1500\,s for $T_s = 5$\,s, and 1800\,s for $T_s = 10$\,s. Notably, all curves exhibit steep ``cliff'' drops when critical CHs fail---connectivity collapses rapidly rather than degrading gradually. A 10$\times$ reduction in traffic rate roughly doubles network lifetime.
 
 \begin{figure}[t]
   \centering
-  % Replace with your actual file
-  \includegraphics[width=0.9\columnwidth]{fig1.png}
-  \caption{Average remaining energy over time for different traffic loads
-    (e.g., low, medium, and high packet generation rates per node). Higher
-    traffic accelerates energy depletion and reduces the available energy
-    budget of the nodes.}
-  \label{fig:energy_traffic}
-\end{figure}
-
-
-\begin{figure}[t]
-  \centering
-  % Replace with your actual file
-  \includegraphics[width=0.9\columnwidth]{fig1.png}
-  \caption{Fraction of nodes that remain connected to the sink over time
-    for different traffic loads. Under high traffic, connectivity drops
-    significantly earlier, reducing the effective network lifetime.}
+  \includegraphics[width=0.9\columnwidth]{figures/connectivity_over_time.png}
+  \caption{Fraction of nodes connected to the sink over time for different traffic intervals ($T_s = 0.1$, $1.0$, $5.0$, $10.0$\,s). Higher traffic loads reduce the effective network lifetime. Parameters: $E_0 = 0.25$\,mAh, $p_{\text{loss}} = 0.01$.}
   \label{fig:connectivity_vs_time_traffic}
 \end{figure}
 
+\subsubsection{Role-Based Energy Depletion}
+Fig.~\ref{fig:lifetime_cdf} presents the CDF of node lifetimes by role. Routers die earliest with a median lifetime of approximately 1500\,s, followed by cluster heads at 2000\,s, while leaf nodes survive longest with a median of 2500\,s. The 1000\,s spread between roles confirms significant energy imbalance---critical infrastructure nodes deplete faster due to forwarding and control overhead. This explains the connectivity cliff: the network disconnects while many leaf nodes still have substantial remaining energy. The results suggest that CH rotation or load-balancing mechanisms could significantly extend network lifetime.
 
 \begin{figure}[t]
   \centering
-  % Replace with your actual file
-  \includegraphics[width=0.9\columnwidth]{fig1.png}
-  \caption{The cumulative distribution
-    function (CDF) of node lifetimes, separately for cluster heads and
-    leaf nodes.}
+  \includegraphics[width=0.9\columnwidth]{figures/node_lifetime_cdf.png}
+  \caption{Cumulative distribution function (CDF) of node lifetimes by role: cluster heads, leaf nodes, and routers. Parameters: $E_0 = 0.25$\,mAh, $T_s = 1$\,s, $p_{\text{loss}} = 0.01$.}
   \label{fig:lifetime_cdf}
 \end{figure}
-
-\subsubsection{Impact of Traffic Load on Lifetime}
-Fig.~\ref{fig:energy_traffic} compares the average remaining energy and
-connectivity over time for different traffic loads. Higher packet
-generation rates lead to a faster reduction in the average remaining
-energy and a correspondingly earlier loss of connectivity. For high
-traffic, the network lifetime (time until fewer than $80\%$ of nodes
-remain connected) can be reduced by more than half compared to the
-low-traffic scenario. This highlights a fundamental trade-off between
-throughput and lifetime in the proposed hybrid architecture.
-
-\subsubsection{Comparison with Energy-Aware Configuration (Optional)}
-If an energy-aware configuration is enabled, in which cluster-head
-roles are periodically rotated or constrained by a maximum number of
-children, the lifetime results improve. In our simulations, the
-energy-aware configuration shifts the node lifetime CDF for cluster
-heads closer to that of leaf nodes and delays the onset of major
-connectivity losses. Consequently, the time at which PDR drops below
-the target threshold increases, demonstrating that simple
-energy-balancing mechanisms can significantly enhance the robustness
-of the hybrid cluster-tree and mesh network.
-
 \section{Conclusion and Future Work}
 % summary + future work
 

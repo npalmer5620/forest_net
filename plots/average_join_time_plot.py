@@ -35,6 +35,8 @@ def plot():
     ax.set_xlabel("Network Size (nodes)")
     ax.set_ylabel("Average Join Time (s)")
     ax.grid(True, linestyle="--", linewidth=0.4, alpha=0.7)
+    ax.text(0.02, 0.98, r"$E_0 = 0.25$ mAh, $T_s = 1$s, $P_{loss} = 0.01$", transform=ax.transAxes,
+            fontsize=7, ha='left', va='top')
 
     fig.tight_layout()
     output_dir = Path(__file__).parent / "figures"

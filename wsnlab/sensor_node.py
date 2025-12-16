@@ -17,13 +17,33 @@ from table_entries import *
 
 BATTERY_CAPACITY_MJ = config.BATTERY_CAPACITY_MAH * 3.0 * 3600
 
-# for energy calc
+# for energy calc - estimate packet size based on type
 def _estimate_packet_size_bytes(pck: dict) -> int:
-    base = 64
-    per_field = 4  # bytes per field
-    field_count = sum(1 for key in pck.keys() if pck[key] is not None)
-    mac_bytes = base + per_field * max(field_count, 0)
-    return mac_bytes + 6  # N + 6 phy
+    PHY_OVERHEAD = 6 
+    MAC_OVERHEAD = 8 
+    BASE_HEADER = 13 # type(1) + addr_type(1) + ack(1) + hop_count(1) + use_mesh(1) + seq_no(2) + addrs(6)
+
+    p_type = pck.get('type', 'NULL')
+
+    # type specific payload
+    type_sizes = {
+        'PROBE': 0,
+        'PROBE_CH': 0,
+        'PROBE_CM': 0,
+        'PROBE_ROUTER': 0,
+        'HEART_BEAT': 19, # uid(8) + role(1) + capabilities(5) + child_addr(2) + path_cost(2) + hops_to_root(1)
+        'JOIN_REQ': 14, # uid(8) + role(1) + capabilities(5)
+        'JOIN_ACK': 21, # uid(8) + target_uid(8) + promoted_reg(1) + cm_addr(2) + ch_addr(2)
+        'ACK': 3, # ack_seq_no(2) + ack_type(1)
+        'NETID_REQ': 8, # target_uid(8)
+        'NETID_RESP': 9, # target_uid(8) + net_id(1)
+        'NETID_KEEPALIVE': 9, # net_id(1) + requester_uid(8)
+        'CH_PROMOTE': 62, # uid(8) + new_parent(2) + ch_addr(2) + members_table(~50)
+        'DATA': 4, # payload(4)
+    }
+
+    extra = type_sizes.get(p_type, 10)
+    return PHY_OVERHEAD + MAC_OVERHEAD + BASE_HEADER + extra
 
 class SensorNode(wsn.Node):
     # init of SensorNode
@@ -321,6 +341,16 @@ class SensorNode(wsn.Node):
             return
         self.is_alive = False
         self.log(f"battery depleted{f" ({reason})" if reason else ""}")
+        
+        # log death with primary role
+        primary_role = self.role
+        if self.id in ROLE_HISTORY and ROLE_HISTORY[self.id]:
+            role_times = {}
+            for role, time_in, _ in ROLE_HISTORY[self.id]:
+                role_times[role] = role_times.get(role, 0) + time_in
+            primary_role = max(role_times, key=role_times.get)
+        NODE_DEATHS.append((self.id, self.now, primary_role))
+        
         self.kill_all_timers()
         self.clear_tx_range()
         self.erase_parent()
@@ -425,7 +455,7 @@ class SensorNode(wsn.Node):
 
         self.role = new_role
 
-        if recolor:
+        if recolor and getattr(self, 'is_alive', True):
             if new_role == Roles.UNDISCOVERED:
                 self.scene.nodecolor(self.id, 1, 1, 1)
             elif new_role == Roles.UNREGISTERED:
@@ -485,6 +515,8 @@ class SensorNode(wsn.Node):
 
     # runs to become unregistered
     def become_unregistered(self, *, preserve_neighbors=False):
+        if not self.is_alive:
+            return  # dont update if dead
         self.kill_timer('TIMER_PROBE')
         if self.role != Roles.UNDISCOVERED:
             self.kill_all_timers()
@@ -943,6 +975,8 @@ class SensorNode(wsn.Node):
 
     # maintain neighbor/member/child network tables
     def maintain_tables(self):
+        if not self.is_alive:
+            return
         # neighbor table cleanup
         for n_addr, n_entry in list(self.neighbors_table.items()):
             if n_entry is None:
@@ -1974,6 +2008,9 @@ class SensorNode(wsn.Node):
 
     # timer handlers
     def on_timer_fired(self, name, *args, **kwargs):
+        # don't process timers if dead (except TIMER_ARRIVAL for initial)
+        if not self.is_alive and name != 'TIMER_ARRIVAL':
+            return
         if name == 'TIMER_ARRIVAL':  # wakes up and set timer probe once time arrival timer fired
             self.scene.nodecolor(self.id, 1, 0, 0)  # sets self color to red
             if self.id not in JOIN_START_TIMES:

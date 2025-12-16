@@ -19,3 +19,5 @@ DATA_PACKETS_SENT = [0] # data packets generated
 DATA_PACKETS_DELIVERED = [0] # data packets received at dst
 ROLE_HISTORY = {} # node_id -> [(role, time_in_role, energy_consumed)]
 PDR_SAMPLES = []  # (time, sent, delivered, pdr_pct)
+CONNECTIVITY_SAMPLES = []  # (time, connected, alive, connectivity_pct, e0_mah, traffic_interval)
+NODE_DEATHS = []  # (node_id, death_time, primary_role)
