@@ -7,8 +7,7 @@
 \providecommand{\BIBentrySTDinterwordspacing}{\spaceskip=0pt\relax}
 \providecommand{\BIBentryALTinterwordstretchfactor}{4}
 \providecommand{\BIBentryALTinterwordspacing}{\spaceskip=\fontdimen2\font plus
-\BIBentryALTinterwordstretchfactor\fontdimen3\font minus
-  \fontdimen4\font\relax}
+\BIBentryALTinterwordstretchfactor\fontdimen3\font minus \fontdimen4\font\relax}
 \providecommand{\BIBforeignlanguage}[2]{{%
 \expandafter\ifx\csname l@#1\endcsname\relax
 \typeout{** WARNING: IEEEtran.bst: No hyphenation pattern has been}%
@@ -22,47 +21,29 @@
 \BIBdecl
 
 \bibitem{926982}
-W.~Heinzelman, A.~Chandrakasan, and H.~Balakrishnan, ``Energy-efficient
-  communication protocol for wireless microsensor networks,'' in
-  \emph{Proceedings of the 33rd Annual Hawaii International Conference on
-  System Sciences}, 2000, pp. 10 pp. vol.2--.
+W.~Heinzelman, A.~Chandrakasan, and H.~Balakrishnan, ``Energy-efficient communication protocol for wireless microsensor networks,'' in \emph{Proceedings of the 33rd Annual Hawaii International Conference on System Sciences}, 2000, pp. 10 pp. vol.2--.
 
 \bibitem{749281}
-C.~Perkins and E.~Royer, ``Ad-hoc on-demand distance vector routing,'' in
-  \emph{Proceedings WMCSA'99. Second IEEE Workshop on Mobile Computing Systems
-  and Applications}, 1999, pp. 90--100.
+C.~Perkins and E.~Royer, ``Ad-hoc on-demand distance vector routing,'' in \emph{Proceedings WMCSA'99. Second IEEE Workshop on Mobile Computing Systems and Applications}, 1999, pp. 90--100.
 
 \bibitem{johnson2001dsr}
-D.~B. Johnson, D.~A. Maltz, J.~Broch \emph{et~al.}, ``Dsr: The dynamic source
-  routing protocol for multi-hop wireless ad hoc networks,'' \emph{Ad hoc
-  networking}, vol.~5, no.~1, pp. 139--172, 2001.
+D.~B. Johnson, D.~A. Maltz, J.~Broch \emph{et~al.}, ``Dsr: The dynamic source routing protocol for multi-hop wireless ad hoc networks,'' \emph{Ad hoc networking}, vol.~5, no.~1, pp. 139--172, 2001.
 
 \bibitem{1035242}
-S.~Lindsey and C.~Raghavendra, ``Pegasis: Power-efficient gathering in sensor
-  information systems,'' in \emph{Proceedings, IEEE Aerospace Conference},
-  vol.~3, 2002, pp. 3--3.
+S.~Lindsey and C.~Raghavendra, ``Pegasis: Power-efficient gathering in sensor information systems,'' in \emph{Proceedings, IEEE Aerospace Conference}, vol.~3, 2002, pp. 3--3.
 
 \bibitem{ergen2004zigbee}
-S.~C. Ergen, ``Zigbee/ieee 802.15. 4 summary,'' \emph{UC Berkeley, September},
-  vol.~10, no.~17, p.~11, 2004.
+S.~C. Ergen, ``Zigbee/ieee 802.15. 4 summary,'' \emph{UC Berkeley, September}, vol.~10, no.~17, p.~11, 2004.
 
 \bibitem{1637928}
-O.~Younis, M.~Krunz, and S.~Ramasubramanian, ``Node clustering in wireless
-  sensor networks: recent developments and deployment challenges,'' \emph{IEEE
-  Network}, vol.~20, no.~3, pp. 20--25, May 2006.
+O.~Younis, M.~Krunz, and S.~Ramasubramanian, ``Node clustering in wireless sensor networks: recent developments and deployment challenges,'' \emph{IEEE Network}, vol.~20, no.~3, pp. 20--25, May 2006.
 
 \bibitem{8633905}
-T.~M. Behera, S.~K. Mohapatra, U.~C. Samal, M.~S. Khan, M.~Daneshmand, and
-  A.~H. Gandomi, ``Residual energy-based cluster-head selection in wsns for iot
-  application,'' \emph{IEEE Internet of Things Journal}, vol.~6, no.~3, pp.
-  5132--5139, June 2019.
+T.~M. Behera, S.~K. Mohapatra, U.~C. Samal, M.~S. Khan, M.~Daneshmand, and A.~H. Gandomi, ``Residual energy-based cluster-head selection in wsns for iot application,'' \emph{IEEE Internet of Things Journal}, vol.~6, no.~3, pp. 5132--5139, June 2019.
 
 \bibitem{ABOLHASAN20041}
 \BIBentryALTinterwordspacing
-M.~Abolhasan, T.~Wysocki, and E.~Dutkiewicz, ``A review of routing protocols
-  for mobile ad hoc networks,'' \emph{Ad Hoc Networks}, vol.~2, no.~1, pp.
-  1--22, 2004. [Online]. Available:
-  \url{https://www.sciencedirect.com/science/article/pii/S157087050300043X}
+M.~Abolhasan, T.~Wysocki, and E.~Dutkiewicz, ``A review of routing protocols for mobile ad hoc networks,'' \emph{Ad Hoc Networks}, vol.~2, no.~1, pp. 1--22, 2004. [Online]. Available: \url{https://www.sciencedirect.com/science/article/pii/S157087050300043X}
 \BIBentrySTDinterwordspacing
 
 \end{thebibliography}

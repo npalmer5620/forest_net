@@ -1,14 +1,14 @@
 # Fdb version 4
-["bibtex final_paper"] 1765875624.14082 "final_paper.aux" "final_paper.bbl" "final_paper" 1765875652.66866 0
+["bibtex final_paper"] 1765914902.00065 "final_paper.aux" "final_paper.bbl" "final_paper" 1765915302.05295 0
   "./references.bib" 1765864192.21078 7524 735cf677766516f99585344c3589edc5 ""
   "/opt/homebrew/Cellar/texlive/20250308_2/share/texmf-dist/bibtex/bst/ieeetran/IEEEtran.bst" 1741388039 57748 7c8250ecf02814ce6ddc0cdbb63df1dd ""
-  "final_paper.aux" 1765875652.5301 8311 dda91e0b333c91458fd81cf967e9ebfb "pdflatex"
+  "final_paper.aux" 1765915301.91686 6623 c9a49a1e48f9bba4f9b3e5f22cb3fa35 "pdflatex"
   (generated)
   "final_paper.bbl"
   "final_paper.blg"
   (rewritten before read)
-["pdflatex"] 1765875651.12085 "/Users/nicknationwide/ms_notes/EE662Fall2025/paper/final_paper.tex" "final_paper.pdf" "final_paper" 1765875652.66878 0
-  "/Users/nicknationwide/ms_notes/EE662Fall2025/paper/final_paper.tex" 1765875650.95803 30199 67c855beb154b456d2a0cbfc3a0f3a57 ""
+["pdflatex"] 1765915300.55267 "/Users/nicknationwide/ms_notes/EE662Fall2025/paper/final_paper.tex" "final_paper.pdf" "final_paper" 1765915302.05306 0
+  "/Users/nicknationwide/ms_notes/EE662Fall2025/paper/final_paper.tex" 1765915300.33469 27494 8fbf5f3ac4b8182660b271b65f40f2e2 ""
   "/opt/homebrew/Cellar/texlive/20250308_2/share/texmf-dist/fonts/enc/dvips/base/8r.enc" 1741388039 4850 80dc9bab7f31fb78a000ccfed0e27cab ""
   "/opt/homebrew/Cellar/texlive/20250308_2/share/texmf-dist/fonts/map/fontname/texfonts.map" 1741388039 3524 cb3e574dea2d1052e39280babc910dc8 ""
   "/opt/homebrew/Cellar/texlive/20250308_2/share/texmf-dist/fonts/map/pdftex/updmap/pdftex.map" 1741388039 5466553 2748998d7db8078826afa1f272036265 ""
@@ -171,6 +171,7 @@
   "/opt/homebrew/Cellar/texlive/20250308_2/share/texmf-dist/tex/latex/caption/subcaption.sty" 1741388039 12494 0c0cdb824278a4d51cefeb2e79901315 ""
   "/opt/homebrew/Cellar/texlive/20250308_2/share/texmf-dist/tex/latex/cite/cite.sty" 1741388039 26218 19edeff8cdc2bcb704e8051dc55eb5a7 ""
   "/opt/homebrew/Cellar/texlive/20250308_2/share/texmf-dist/tex/latex/epstopdf-pkg/epstopdf-base.sty" 1741388039 13886 d1306dcf79a944f6988e688c1785f9ce ""
+  "/opt/homebrew/Cellar/texlive/20250308_2/share/texmf-dist/tex/latex/float/float.sty" 1741388039 6749 16d2656a1984957e674b149555f1ea1d ""
   "/opt/homebrew/Cellar/texlive/20250308_2/share/texmf-dist/tex/latex/graphics-cfg/color.cfg" 1741388039 1213 620bba36b25224fa9b7e1ccb4ecb76fd ""
   "/opt/homebrew/Cellar/texlive/20250308_2/share/texmf-dist/tex/latex/graphics-cfg/graphics.cfg" 1741388039 1224 978390e9c2234eab29404bc21b268d1e ""
   "/opt/homebrew/Cellar/texlive/20250308_2/share/texmf-dist/tex/latex/graphics-def/pdftex.def" 1741388039 19440 9da9dcbb27470349a580fca7372d454b ""
@@ -206,9 +207,9 @@
   "figures/tree_vs_mesh_lifetime.png" 1765838796.71761 131054 4dd4ecd0c65c431e28f4773e574287cf ""
   "figures/tree_vs_mesh_pdr.png" 1765858100.24572 111252 c45be9c4c4fd343bc296da01ff269252 ""
   "figures/wsn_arch.png" 1765490036 93708 cc7d08c6accf2df3576293b4ae7a5e11 ""
-  "final_paper.aux" 1765875652.5301 8311 dda91e0b333c91458fd81cf967e9ebfb "pdflatex"
-  "final_paper.bbl" 1765875624.18539 2774 dedad295be6901268d8277c487fa1f9c "bibtex final_paper"
-  "final_paper.tex" 1765875650.95803 30199 67c855beb154b456d2a0cbfc3a0f3a57 ""
+  "final_paper.aux" 1765915301.91686 6623 c9a49a1e48f9bba4f9b3e5f22cb3fa35 "pdflatex"
+  "final_paper.bbl" 1765914902.05073 2736 79de4edec6ff2cf2b8cf9cc71a13bcf3 "bibtex final_paper"
+  "final_paper.tex" 1765915300.33469 27494 8fbf5f3ac4b8182660b271b65f40f2e2 ""
   (generated)
   "final_paper.aux"
   "final_paper.log"

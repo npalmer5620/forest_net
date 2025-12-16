@@ -7,6 +7,9 @@ import random
 import statistics
 from collections import defaultdict
 
+if config.SEED is not None:
+    random.seed(config.SEED)
+
 from roles import Roles
 from tracking_containers import (
     NODE_POS,
@@ -195,7 +198,7 @@ if __name__ == "__main__":
         print(f"pdr: {pdr:.2f}% ({delivered} delivered/{sent} sent)")
 
     # end to end delay
-    delays = [e['delay'] for e in PACKET_DELIVERY_LOGS if e.get('type') == 'DATA' and e.get('delay') is not None]
+    delays = [e['delay'] for e in list(PACKET_DELIVERY_LOGS) if e.get('type') == 'DATA' and e.get('delay') is not None]
     if len(delays) >= 2:
         mean_delay = statistics.mean(delays)
         std_delay = statistics.stdev(delays)

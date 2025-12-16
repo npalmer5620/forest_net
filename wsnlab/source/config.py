@@ -1,4 +1,5 @@
 ## simulation properties
+SEED = 42 # random seed
 ENABLE_ROUTERS = True # enable routers
 TREE_ONLY = False # use tree routing only
 SIM_NODE_COUNT = 50 # node count in simulation
@@ -20,7 +21,7 @@ REVIVE_DELAY = 100 # delay after kill before reviving nodes
 NODE_ARRIVAL_MAX = 50 # max time for nodes to wake at
 SIM_NODE_PLACING_CELL_SIZE = 75 # cell size to place one node
 SIM_DURATION = 5000 # simulation duration in seconds
-SIM_TIME_SCALE = 0.001 # real time duration of 1 second simulation time
+SIM_TIME_SCALE = 0.0025 # real time duration of 1 second simulation time
 SIM_TERRAIN_SIZE = (650, 650) # terrain size
 SIM_TITLE = 'ForestNet' # title of visualization window
 SIM_VISUALIZATION = True # visualization active
@@ -54,7 +55,7 @@ EXPORT_CH_CSV_INTERVAL = 10 # simulation time units
 EXPORT_NEIGHBOR_CSV_INTERVAL = 10 # simulation time units
 JOIN_REJECT_BACKOFF = 5 # how long to wait before retrying a parent that denied join
 TIMER_JOIN_REQ_INTERVAL = 1 # how often to resend join requests
-SENSOR_BASE_INTERVAL = 1 # interval for sensor packets
+SENSOR_BASE_INTERVAL = 0.5 # interval for sensor packets
 ROUTERABLE_CHECK_INTERVAL = 10 # how often to check if node can become a router
 TABLE_MAINT_INTERVAL = 2 # how often to check and maintain routing table
 PARENT_SWITCH_HYSTERESIS = 0.01 # require % improvement in rx_cost to switch parents

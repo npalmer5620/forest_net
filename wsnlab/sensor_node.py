@@ -1352,10 +1352,6 @@ class SensorNode(wsn.Node):
 
         # otherwise, up the tree!!!
         if self.role != Roles.ROOT and self.parent_address is not None:
-            if self.parent_address == prev_hop:
-                self.log(f"loop detected, parent {self.parent_address} sent non-routable {pck}")
-                return -1
-
             pck['next_hop_addr'] = self.parent_address
             return self.send(pck)
 
