@@ -1,14 +1,14 @@
 # Fdb version 4
-["bibtex final_paper"] 1765914902.00065 "final_paper.aux" "final_paper.bbl" "final_paper" 1765915302.05295 0
+["bibtex final_paper"] 1765914902.00065 "final_paper.aux" "final_paper.bbl" "final_paper" 1765916167.48745 0
   "./references.bib" 1765864192.21078 7524 735cf677766516f99585344c3589edc5 ""
   "/opt/homebrew/Cellar/texlive/20250308_2/share/texmf-dist/bibtex/bst/ieeetran/IEEEtran.bst" 1741388039 57748 7c8250ecf02814ce6ddc0cdbb63df1dd ""
-  "final_paper.aux" 1765915301.91686 6623 c9a49a1e48f9bba4f9b3e5f22cb3fa35 "pdflatex"
+  "final_paper.aux" 1765916167.34568 6623 c9a49a1e48f9bba4f9b3e5f22cb3fa35 "pdflatex"
   (generated)
   "final_paper.bbl"
   "final_paper.blg"
   (rewritten before read)
-["pdflatex"] 1765915300.55267 "/Users/nicknationwide/ms_notes/EE662Fall2025/paper/final_paper.tex" "final_paper.pdf" "final_paper" 1765915302.05306 0
-  "/Users/nicknationwide/ms_notes/EE662Fall2025/paper/final_paper.tex" 1765915300.33469 27494 8fbf5f3ac4b8182660b271b65f40f2e2 ""
+["pdflatex"] 1765916165.93411 "/Users/nicknationwide/ms_notes/EE662Fall2025/paper/final_paper.tex" "final_paper.pdf" "final_paper" 1765916167.48755 0
+  "/Users/nicknationwide/ms_notes/EE662Fall2025/paper/final_paper.tex" 1765916165.72037 27487 7d202d3822cb49fcc43bb163d30fee41 ""
   "/opt/homebrew/Cellar/texlive/20250308_2/share/texmf-dist/fonts/enc/dvips/base/8r.enc" 1741388039 4850 80dc9bab7f31fb78a000ccfed0e27cab ""
   "/opt/homebrew/Cellar/texlive/20250308_2/share/texmf-dist/fonts/map/fontname/texfonts.map" 1741388039 3524 cb3e574dea2d1052e39280babc910dc8 ""
   "/opt/homebrew/Cellar/texlive/20250308_2/share/texmf-dist/fonts/map/pdftex/updmap/pdftex.map" 1741388039 5466553 2748998d7db8078826afa1f272036265 ""
@@ -207,9 +207,9 @@
   "figures/tree_vs_mesh_lifetime.png" 1765838796.71761 131054 4dd4ecd0c65c431e28f4773e574287cf ""
   "figures/tree_vs_mesh_pdr.png" 1765858100.24572 111252 c45be9c4c4fd343bc296da01ff269252 ""
   "figures/wsn_arch.png" 1765490036 93708 cc7d08c6accf2df3576293b4ae7a5e11 ""
-  "final_paper.aux" 1765915301.91686 6623 c9a49a1e48f9bba4f9b3e5f22cb3fa35 "pdflatex"
+  "final_paper.aux" 1765916167.34568 6623 c9a49a1e48f9bba4f9b3e5f22cb3fa35 "pdflatex"
   "final_paper.bbl" 1765914902.05073 2736 79de4edec6ff2cf2b8cf9cc71a13bcf3 "bibtex final_paper"
-  "final_paper.tex" 1765915300.33469 27494 8fbf5f3ac4b8182660b271b65f40f2e2 ""
+  "final_paper.tex" 1765916165.72037 27487 7d202d3822cb49fcc43bb163d30fee41 ""
   (generated)
   "final_paper.aux"
   "final_paper.log"
