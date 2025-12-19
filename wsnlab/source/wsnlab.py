@@ -262,7 +262,10 @@ class Node:
 
         """
         self.active_timer_list.append(name)
-        self.delayed_exec(time - 0.00001, self.on_timer_fired_check, name, *args, **kwargs)
+        delay = time - 0.00001
+        if delay <= 0:
+            delay = 0.00001
+        self.delayed_exec(delay, self.on_timer_fired_check, name, *args, **kwargs)
 
     ############################
     def kill_timer(self, name):

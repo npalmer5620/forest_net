@@ -23,15 +23,6 @@
 \bibitem{926982}
 W.~Heinzelman, A.~Chandrakasan, and H.~Balakrishnan, ``Energy-efficient communication protocol for wireless microsensor networks,'' in \emph{Proceedings of the 33rd Annual Hawaii International Conference on System Sciences}, 2000, pp. 10 pp. vol.2--.
 
-\bibitem{749281}
-C.~Perkins and E.~Royer, ``Ad-hoc on-demand distance vector routing,'' in \emph{Proceedings WMCSA'99. Second IEEE Workshop on Mobile Computing Systems and Applications}, 1999, pp. 90--100.
-
-\bibitem{johnson2001dsr}
-D.~B. Johnson, D.~A. Maltz, J.~Broch \emph{et~al.}, ``Dsr: The dynamic source routing protocol for multi-hop wireless ad hoc networks,'' \emph{Ad hoc networking}, vol.~5, no.~1, pp. 139--172, 2001.
-
-\bibitem{1035242}
-S.~Lindsey and C.~Raghavendra, ``Pegasis: Power-efficient gathering in sensor information systems,'' in \emph{Proceedings, IEEE Aerospace Conference}, vol.~3, 2002, pp. 3--3.
-
 \bibitem{ergen2004zigbee}
 S.~C. Ergen, ``Zigbee/ieee 802.15. 4 summary,'' \emph{UC Berkeley, September}, vol.~10, no.~17, p.~11, 2004.
 
@@ -41,9 +32,18 @@ O.~Younis, M.~Krunz, and S.~Ramasubramanian, ``Node clustering in wireless senso
 \bibitem{8633905}
 T.~M. Behera, S.~K. Mohapatra, U.~C. Samal, M.~S. Khan, M.~Daneshmand, and A.~H. Gandomi, ``Residual energy-based cluster-head selection in wsns for iot application,'' \emph{IEEE Internet of Things Journal}, vol.~6, no.~3, pp. 5132--5139, June 2019.
 
+\bibitem{749281}
+C.~Perkins and E.~Royer, ``Ad-hoc on-demand distance vector routing,'' in \emph{Proceedings WMCSA'99. Second IEEE Workshop on Mobile Computing Systems and Applications}, 1999, pp. 90--100.
+
 \bibitem{ABOLHASAN20041}
 \BIBentryALTinterwordspacing
 M.~Abolhasan, T.~Wysocki, and E.~Dutkiewicz, ``A review of routing protocols for mobile ad hoc networks,'' \emph{Ad Hoc Networks}, vol.~2, no.~1, pp. 1--22, 2004. [Online]. Available: \url{https://www.sciencedirect.com/science/article/pii/S157087050300043X}
 \BIBentrySTDinterwordspacing
+
+\bibitem{johnson2001dsr}
+D.~B. Johnson, D.~A. Maltz, J.~Broch \emph{et~al.}, ``Dsr: The dynamic source routing protocol for multi-hop wireless ad hoc networks,'' \emph{Ad hoc networking}, vol.~5, no.~1, pp. 139--172, 2001.
+
+\bibitem{1035242}
+S.~Lindsey and C.~Raghavendra, ``Pegasis: Power-efficient gathering in sensor information systems,'' in \emph{Proceedings, IEEE Aerospace Conference}, vol.~3, 2002, pp. 3--3.
 
 \end{thebibliography}

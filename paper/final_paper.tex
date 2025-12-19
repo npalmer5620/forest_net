@@ -30,7 +30,7 @@
 \maketitle
 
 \begin{abstract}
-  Wireless sensor networks (WSNs) are self-organizing networks of sensor nodes deployed to monitor the environment. These networks are typically battery-powered with limited energy capacity and processing capabilities, requiring energy-efficient communication protocols and resilience to network failures. To address these challenges, we propose a hybrid WSN that combines cluster-tree and mesh routing to enhance network performance. We also implement router-bridge nodes to improve energy efficiency between cluster heads. We evaluate our hybrid WSN using a Python simulation tool and compare it with existing WSNs.
+  Wireless sensor networks (WSNs) are self-organizing networks of sensor nodes deployed to monitor the environment. These networks are typically battery-powered with limited energy capacity and processing capabilities, requiring energy-efficient communication protocols and resilience to network failures. To address these challenges, we propose a hybrid WSN that combines cluster-tree and mesh routing to enhance network performance. We also implement router-bridge nodes to improve energy efficiency between cluster heads. We present an evaluation of the network along with several experiments .
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -67,47 +67,34 @@ As we can see, both topologies have their advantages and disadvantages: cluster-
 To address these tradeoffs, hybrid WSNs that incorporate both cluster-tree and mesh routing have been proposed. In these approaches, nodes are organized into a cluster-tree topology, but they can also use mesh links to route data between clusters. This allows for greater robustness to node failures, as nodes can use mesh links to route bypass failed cluster-heads. Additionally, the cluster-tree structure allows for more efficient routing within vertically within the tree structure of the network, further reducing the need for every member node to maintain routing information for all its cluster neighbors.
 
 \subsection{Contributions}
-In this paper, we present the design and evaluation of a hybrid WSN that combines cluster-tree and mesh routing. We first describe the design of the hybrid topology formation and routing protocol, including the use of router-bridge nodes to improve energy efficiency between cluster heads. We then implement the protocol via a Python simulation and evaluate its performance in terms of average join time, connectivity, packet delivery, and energy use, under node and link losses. Finally, we compare the performance of our hybrid WSN with existing WSNs.
+In this paper, we present the design and evaluation of a hybrid WSN that combines cluster-tree and mesh routing. We first describe the design of the hybrid topology formation and routing protocol, including the use of router-bridge nodes to improve energy efficiency between cluster heads. We then implement the protocol via a Python simulation and evaluate its performance in terms of average join time, connectivity, packet delivery, and energy use, under node and link losses.
 
 \vspace{1em}
 \section{Related Work}
 We briefly review prior works on cluster-tree and mesh routing protocols in WSNs, as well as existing hybrid approaches.
 
 \subsection{Cluster-Tree Protocols}
-% TODO: Add relevant cluster-tree protocols
+Hierarchical clustering has been widely studied as a means to improve energy efficiency and scalability in WSNs. Heinzelman et al.~\cite{926982} introduced LEACH (Low-Energy Adaptive Clustering Hierarchy), an important protocol that organizes nodes into clusters with rotating cluster heads (CHs) to balance energy consumption across nodes. LEACH demonstrated significant savings over direct transmission by localizing data aggregation at CHs, but it assumes a simplified communication model (e.g., CH-to-sink communication patterns) that can limit applicability in modern networks \cite{926982}.
+
+In standards-based IoT networking, ZigBee (built on IEEE~802.15.4) is commonly summarized as supporting hierarchical organization, where parent nodes manage address allocation and routing responsibilities for children \cite{ergen2004zigbee}. Such cluster-tree organization provides predictable formation and per-node performance, but strict parent-child dependence can reduce robustness when parent nodes fail or the link degrades. ZigBee is widely deployed in commercial IoT devices.
+
+More broadly, Younis et al.~\cite{1637928} surveyed clustering techniques and practical challenges including CH selection, cluster formation stability, and uneven energy depletion of nodes. Recent work continues to refine CH election criteria; for example, Behera et al.~\cite{8633905} propose residual-energy-based CH selection to better balance routing and extend lifetime compared to existing clustering methods. While these approaches improve energy balancing within hierarchical structures, they typically do not provide explicit inter-cluster mesh connectivity akin to mesh routing \cite{1637928,8633905}.
+
 
 \subsection{Mesh Routing Protocols}
-% TODO: Add relevant mesh routing protocols
+Mesh routing protocols support flexible multi-hop communication without a predefined hierarchy, improving resilience via alternate paths and adaptive routing. Perkins and Royer~\cite{749281} introduced AODV (Ad-hoc On-Demand Distance Vector), a reactive protocol that discovers routes only when needed and uses sequence numbers to maintain fresh routes. While on-demand discovery can reduce control traffic under light loads, route discovery can introduce latency and overhead as network size increases \cite{749281}.
+
+Abolhasan et al.~\cite{ABOLHASAN20041} survey MANET routing protocols and categorize them into proactive, reactive, and hybrid families, emphasizing that no single approach dominates across widely varying network requirements. Their review highlights the tradeoffs: proactive protocols incur overhead, while reactive protocols incur discovery delay and flooding overhead under demand \cite{ABOLHASAN20041}. These tradeoffs motivate hybrids that adapt routing behavior dynamically while maintaining a hierarchy.
+
 
 \subsection{Hybrid Approaches}
-% TODO: Add relevant hybrid approaches
+Hybrid strategies seek to combine the organizational benefits of hierarchical structures with the robustness of mesh forwarding. In practice, ZigBee stacks are often described as supporting both tree-like organization and mesh routing capability on IEEE~802.15.4 links, enabling deployments to trade off simplicity and low overhead against mesh forwarding \cite{ergen2004zigbee}. However, the degree of mesh utilization may be constrained by device roles and implementation details, and purely hierarchical dependence can still produce connectivity loss when critical parents fail \cite{ergen2004zigbee}.
+
+From a design standpoint, hybrid approaches can be viewed as integrating: (i) clustering and hierarchical organization that prolong lifetime via grouping and reduced routing overhead \cite{926982,1637928}, and (ii) mesh route discovery and multi-path flexibility that improves robustness under failures \cite{749281,johnson2001dsr}. A challenge is that classic MANET-style mesh protocols assume nodes can store and maintain  large routing tables, while many clustering protocols focus on intra-cluster energy efficiency \cite{ABOLHASAN20041,1637928}.
+
 
 \subsection{Summary}
-% TODO: Add relevant summary
-
-% \begin{itemize}
-%   \item \textbf{Summarize relevant literature:}
-%         \begin{itemize}
-%           \item Describe existing cluster-tree protocols (e.g., ZigBee-like
-%                 approaches).
-%           \item Describe mesh routing protocols in sensor/IoT networks.
-%           \item Mention any known hybrid or hierarchical approaches that
-%                 combine tree and mesh ideas.
-%         \end{itemize}
-%   \item \textbf{Highlight limitations of prior work:}
-%         \begin{itemize}
-%           \item Explain what existing solutions do not address (e.g.,
-%                 limited robustness to node failures, no analysis of join
-%                 time, no energy-aware design).
-%         \end{itemize}
-%   \item \textbf{Position the current work:}
-%         \begin{itemize}
-%           \item Clearly state how the proposed hybrid design differs from
-%                 and/or extends prior work and what aspects it focuses on
-%                 (e.g., join time, connectivity under failures, impact of
-%                 energy depletion).
-%         \end{itemize}
-% \end{itemize}
+Existing cluster-tree and clustering protocols such as LEACH~\cite{926982}, PEGASIS~\cite{1035242}, and ZigBee-style hierarchical association~\cite{ergen2004zigbee} demonstrate strong energy benefits from structured organization, but they can be vulnerable to failures or early depletion of critical nodes. Conversely, mesh routing protocols such as AODV~\cite{749281} and DSR~\cite{johnson2001dsr} provide robustness through alternate routing, but they impose overhead (route discovery, control traffic, and/or header/routing cost) that can be significant for constrained sensor nodes. These tradeoffs depend heavily on network density, mobility, and traffic, and motivate hybrid approaches \cite{ABOLHASAN20041}.
 
 \vspace{1em}
 \section{System Model and Assumptions}
@@ -129,7 +116,7 @@ Battery capacity is configured per simulation run for all nodes in mAh and conve
 \[
   E_{\text{init,mJ}} = C_{\text{mAh}} \cdot V \cdot 3600.
 \]
-In our experiments, we test $C_{\text{mAh}}$ across the range 0.25--1.0\,mAh at $V = 3.0$\,V, corresponding to initial energies from $E_{\text{init}} = 2700$\,mJ (2.7\,J) to $E_{\text{init}} = 10{,}800$\,mJ (10.8\,J). These values are lower than typical sensor node batteries to accelerate simulation time while preserving relative consumption behavior.
+In our experiments, we test $C_{\text{mAh}}$ across the range 0.1--0.5\,mAh at $V = 3.0$\,V, corresponding to initial energies from $E_{\text{init}} = 1080$\,mJ (1.08\,J) to $E_{\text{init}} = 5400$\,mJ (5.4\,J). These values are lower than typical sensor node batteries to accelerate simulation time while preserving relative consumption behavior.
 
 \subsubsection{Packet Size}
 Let $B(p)$ denote the over-the-air size in bytes of packet $p$. This includes PHY overhead (6\,B: preamble, SFD, PHR), MAC overhead (8\,B), a fixed 13\,B common packet header, and a byte count corresponding to the payload type:
@@ -231,7 +218,7 @@ Every forwarded packet carries a \texttt{DST} address and a \texttt{NH} (Next Ho
 \textbf{Rationale:} Mesh routing reduces hop count and energy cost by exploiting local connectivity. The tree provides guaranteed connectivity via a hierarchy: most nodes need only a parent entry and Neighbor Table, and only CHs need to maintain Member and Child Net Tables saving memory.
 
 \subsection{Self-Healing Protocol}
-The protocol continuously checks for stale nodes and changes in all tables to adapt to node failures and improve mobility.
+The protocol continuously checks for stale nodes and changes in all tables to adapt to node failures and maintain table consistency.
 
 \textbf{Neighbor Table:} Updated on any RX (including overheard packets). Entries expire after a configurable window to prevent stale routing.
 
@@ -252,10 +239,9 @@ The protocol continuously checks for stale nodes and changes in all tables to ad
 
 \textbf{Hop Count:} Mesh forwarding reduces hop count in dense networks by enabling horizontal movement. In sparse networks, tree routing guarantees reachability via the tree hierarchy. Without mesh links, packets must traverse upward before descending to the destination cluster.
 
-
 \vspace{1em}
 \section{Simulation and Experiments}
-We implement the hybrid protocol in a modified version of WSNLAB, a discrete-event Network Simulator written in Python. The network, traffic, and energy models follow Section~\ref{sec:system-model}. Unless otherwise noted, experiments use the default parameters in Table~\ref{tab:params}.
+We implement the hybrid protocol in a custom version of WSNLAB, a discrete-event Network Simulator written in Python. The network, traffic, and energy models follow Section~\ref{sec:system-model}. Unless otherwise noted, experiments use the default parameters in Table~\ref{tab:params}.
 
 \begin{table}[t]
   \centering
@@ -265,11 +251,11 @@ We implement the hybrid protocol in a modified version of WSNLAB, a discrete-eve
     \hline
     \textbf{Parameter}                          & \textbf{Value}      \\
     \hline
-    Network size ($N$)                          & 50 nodes            \\
+    Network size ($N$)                          & 10--300 nodes       \\
     Deployment area                             & $650 \times 650$\,m \\
-    Initial energy ($E_0$)                      & 0.25\,mAh           \\
-    Traffic interval ($T_s$)                    & 1.0\,s              \\
-    Packet loss probability ($P_{\text{loss}}$) & 0.01                \\
+    Initial energy ($E_0$)                      & 0.1--0.5\,mAh        \\
+    Traffic interval ($T_s$)                    & 0.1--10\,s           \\
+    Packet loss probability ($P_{\text{loss}}$) & 0--0.1               \\
     \hline
   \end{tabular}
 \end{table}
@@ -285,10 +271,10 @@ We evaluate the protocol using the following metrics:
 \end{itemize}
 
 \subsection{Results}
-We organize experiments into three categories: (1) scalability, varying network size from 25--300 nodes; (2) reliability, varying packet loss probability $P_{\text{loss}}$; and (3) energy, varying initial energy $E_0$ and traffic interval $T_s$. We also compare tree-only routing against the hybrid tree+mesh configuration.
+We organize experiments into three categories: (1) scalability, varying network size from 10--300 nodes; (2) reliability, varying packet loss probability $P_{\text{loss}}$; and (3) energy, varying initial energy $E_0$ and traffic interval $T_s$. We also compare tree-only routing against the hybrid tree+mesh configuration to gather data on network performance.
 
 \subsubsection{Scalability}
-Fig.~\ref{fig:jointime} shows the average join time as a function of network size. Join time increases from approximately 7.2\,s at 25 nodes to 13\,s at 300 nodes. Interestingly, a plateau occurs between 150--250 nodes, we suspect this is where denser deployments provide more CH candidates nearby, reducing discovery latency. The increase at 300 nodes suggests packet congestion during formation in very dense networks.
+Fig.~\ref{fig:jointime} shows the average join time as a function of network size using multiple runs per size. Join time is relatively linear, increasing from 13.6\,s at 10 nodes to 15.8\,s at 300 nodes. Variability is higher in sparse deployments ($\sigma\approx2.45$\,s at 10 nodes) and tightens as density increases ($\sigma\approx0.46$\,s at 300 nodes), indicating more consistent join behavior as neighbor availability improves which makes sense. These runs use $P_{\text{loss}}=0$ and infinite energy to explicitly track network formation time.
 
 \begin{figure}[H]
   \centering
@@ -298,7 +284,7 @@ Fig.~\ref{fig:jointime} shows the average join time as a function of network siz
 \end{figure}
 
 \subsubsection{Network Lifetime vs. Initial Energy}
-Fig.~\ref{fig:lifetime_vs_energy} shows a mostly linear relationship between initial energy $E_0$ and network lifetime. At $T_s = 1$\,s, lifetime increases from 650\,s to 2850\,s as $E_0$ grows from 0.1 to 0.5\,mAh. High traffic ($T_s = 0.1$\,s) reduces lifetime by approximately 45\% compared to low traffic, as liftime ranges from 400\,s to 1500\,s. The widening gap at higher energy levels indicates that traffic load becomes the primary factor when energy budgets are less constrained.
+Fig.~\ref{fig:lifetime_vs_energy} shows a mostly linear relationship between initial energy $E_0$ and network lifetime. At $T_s = 1$\,s, lifetime increases from 650\,s to 2850\,s as $E_0$ grows from 0.1 to 0.5\,mAh. High traffic ($T_s = 0.1$\,s) reduces lifetime by approximately 45\% compared to low traffic, as liftime ranges from 400\,s to 1500\,s. The widening gap at higher energy levels indicates that traffic load becomes the primary factor when energy budgets are less constrained as opposed to network overhead which makes sense.
 
 \begin{figure}[H]
   \centering
@@ -308,7 +294,7 @@ Fig.~\ref{fig:lifetime_vs_energy} shows a mostly linear relationship between ini
 \end{figure}
 
 \subsubsection{Reliability Under Packet Loss}
-Fig.~\ref{fig:packetLossRateIMpact} shows cumulative packet delivery ratios under varying packet loss probabilities. The protocol maintains fairly good delivery rates up to $P_{\text{loss}} = 0.01$, achieving an average of approximately 75\% cumulative delivery ratio. At $P_{\text{loss}} = 0.1$, cumulative delivery ratio drops below 60\%, as multi-hop packet loss compounds.
+Fig.~\ref{fig:packetLossRateIMpact} shows cumulative packet delivery ratios under varying packet loss probabilities. The network maintains fairly good delivery rates up to $P_{\text{loss}} = 0.01$, achieving an average of approximately 75\% cumulative delivery ratio. At $P_{\text{loss}} = 0.1$, cumulative delivery ratio drops below 60\%, as multi-hop packet routing losses compound and we drop more packets over more hops.
 
 \begin{figure}[H]
   \centering
@@ -318,7 +304,7 @@ Fig.~\ref{fig:packetLossRateIMpact} shows cumulative packet delivery ratios unde
 \end{figure}
 
 \subsubsection{Tree vs. Mesh: Network Lifetime}
-Fig.~\ref{fig:energy_comparison} compares network lifetime between tree-only and hybrid tree+mesh routing. The hybrid approach consistently outperforms tree-only across all 3 energy levels: with minor improvement at $E_0 = 0.1$\,mAh (600\,s vs. 500\,s) and at 0.25\,mAh (1400\,s vs. 1200\,s), and a more substantial improvement at 0.5\,mAh (2700\,s vs. 2400\,s). The average network lifetime increases with energy level, confirming that mesh reduces hop count and energy per packet over the entire lifetime of the network.
+Fig.~\ref{fig:energy_comparison} compares network lifetime between tree-only and hybrid tree+mesh routing. The hybrid approach consistently outperforms tree-only across all 3 energy levels: with minor improvement at $E_0 = 0.1$\,mAh (600\,s vs. 500\,s) and at 0.25\,mAh (1400\,s vs. 1200\,s), and a more substantial improvement at 0.5\,mAh (2700\,s vs. 2400\,s). The average network lifetime increases with energy level, confirming that the mesh routing reduces averge hop count and energy per packet over the entire lifetime of the network prolonging network life.
 
 \begin{figure}[H]
   \centering
@@ -328,7 +314,7 @@ Fig.~\ref{fig:energy_comparison} compares network lifetime between tree-only and
 \end{figure}
 
 \subsubsection{Tree vs. Mesh: Average Packet Delivery Ratio}
-Fig.~\ref{fig:pdr_over_time} shows average PDR over time for both routing modes. The hybrid approach achieves a peak PDR of 95\% compared to 93\% for tree-only. More importantly, tree-only PDR drops sharply to 84\% at approximately 1000\,s as CH failures disrupt routes, while tree+mesh maintains 88--89\% PDR until 3700\,s. The PDR advantage demonstrates that mesh links provide alternative paths when tree links fail, improving network resilience.
+Fig.~\ref{fig:pdr_over_time} shows average PDR over time for both routing modes (50 nodes, $E_0=0.5$\,mAh, $T_s=1$\,s, $P_{\text{loss}}=0.01$). The hybrid approach peaks at $\approx95.4\%$ versus $\approx91.9\%$ for tree-only. After the initial ramp, tree+mesh averages $\approx92.8\%$ PDR over 100--3000\,s and remains near 90.3\% at 3000\,s, while tree-only averages $\approx87.5\%$ and falls to \mbox{$\approx85.3\%$}. The PDR advantage is consistent with lower average hop counts under mesh forwarding, which reduces cumulative packet loss probability even at $P_{\text{loss}}=0.01$. Mesh links also provide alternative paths when tree links fail, improving network delivery rates.
 
 \begin{figure}[H]
   \centering
@@ -338,7 +324,7 @@ Fig.~\ref{fig:pdr_over_time} shows average PDR over time for both routing modes.
 \end{figure}
 
 \subsubsection{Impact of Traffic Load}
-Fig.~\ref{fig:connectivity_vs_time_traffic} shows connectivity over time for different traffic intervals. Network lifetime (80\% connectivity threshold) varies dramatically: approximately 900\,s for $T_s = 0.1$\,s, 1300\,s for $T_s = 1$\,s, 1600\,s for $T_s = 5$\,s, and 1800\,s for $T_s = 10$\,s. Notably, all curves exhibit steep ``cliff'' drops when critical nodes fail---connectivity collapses rapidly rather than degrading gradually. This behavior is not surprising, as critical nodes in the network deplete faster due to forwarding and control overhead along the cluster tree.
+Fig.~\ref{fig:connectivity_vs_time_traffic} shows connectivity over time for different traffic intervals. Network lifetime (80\% connectivity threshold) varies dramatically: approximately 900\,s for $T_s = 0.1$\,s, 1300\,s for $T_s = 1$\,s, 1600\,s for $T_s = 5$\,s, and 1800\,s for $T_s = 10$\,s. Notably, all curves exhibit sharp drops when critical nodes fail---connectivity collapses rapidly rather than degrading gradually. This behavior is not surprising, as critical nodes in the network deplete faster due to forwarding and control overhead along the cluster tree (mostly seen at router bridges).
 
 \begin{figure}[H]
   \centering
@@ -348,7 +334,7 @@ Fig.~\ref{fig:connectivity_vs_time_traffic} shows connectivity over time for dif
 \end{figure}
 
 \subsubsection{Role-Based Energy Depletion}
-Fig.~\ref{fig:lifetime_cdf} presents the CDF of node lifetimes by role. Routers die earliest with a median lifetime of approximately 1500\,s, followed by cluster heads at 2000\,s, while leaf nodes survive longest with a median of 2500\,s. The spread between roles confirms significant energy use imbalance---critical nodes deplete faster due to forwarding and routing overhead. This explains why the network disconnects while many leaf nodes still have substantial remaining energy. The results suggest that CH rotation or energy aware routing could significantly extend network lifetime.
+Fig.~\ref{fig:lifetime_cdf} presents the CDF of node lifetimes by role. Routers die earliest with a median lifetime of approximately 1500\,s, followed by cluster heads at 2000\,s, while leaf nodes survive longest with a median of 2500\,s. The spread between roles confirms significant energy use imbalance---critical nodes (mostly routers) die faster due to forwarding and routing overhead typical of bridge nodes. This explains why the network disconnects while many leaf nodes still have substantial remaining energy, and it aligns with the connectivity drops observed in Fig.~\ref{fig:connectivity_vs_time_traffic} once key nodes fail. Improving our energy aware routing/roles model would help spread this failure to other nodes in the network.
 
 \begin{figure}[H]
   \centering
@@ -357,7 +343,8 @@ Fig.~\ref{fig:lifetime_cdf} presents the CDF of node lifetimes by role. Routers 
   \label{fig:lifetime_cdf}
 \end{figure}
 \section{Conclusion and Future Work}
-% summary + future work
+We present a hybrid WSN that combines a cluster-tree backbone with mesh forwarding and router-bridge nodes to reduce per-node energy consumption. Using a Python simulation, we evaluated scalability, reliability, and energy tradeoffs. Results show join time remains relatively stable across network sizes, mesh links improve PDR and extend network lifetime compared to tree-only routing, and energy depletion concentrates in critical roles such as routers and cluster heads. Future work could focus on spreading the failiures more evenly across the network.
+
 
 \bibliographystyle{IEEEtran}
 \nocite{*}
